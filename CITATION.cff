@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Liu"
+  given-names: "Yutong"
+  orcid: "https://orcid.org/0009-0005-7038-5801"
+title: "Instructions-MapReduce"
+version: 2.0.4
+date-released: 2024-11-13
+url: "https://github.com/innerNULL/instructions-mr/tree/main"
