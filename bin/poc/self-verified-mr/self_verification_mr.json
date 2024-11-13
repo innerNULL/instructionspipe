@@ -1,0 +1,58 @@
+{
+  "in_data_path": "./bin/poc/self-verified-mr/fake_data.jsonl",
+  "out_data_path": "./_element_mr_text.admission_note.jsonl",
+  "in_text_cols": [
+    "admission_note",
+    "age",
+    "discharge_note",
+    "family_history",
+    "gender",
+    "lab_tests",
+    "medication_history",
+    "nursing_note",
+    "progress_notes",
+    "surgery_notes",
+    "vital_signs"
+  ],
+  "output_col": "results",
+  "port": "8765",
+  "llm": {
+    "api_type": "openai",
+    "api_url": null,
+    "api_key": "",
+    "api_version": "null",
+    "model": "gpt-4o-mini",
+    "sampling": true, 
+    "temperature": 0.0,
+    "top_p": 0.01,
+    "seed": 2
+  },
+  "runner": {
+    "map": {
+      "role": "You are a clinical expert. ",
+      "instructions": [
+        {
+          "name": "medication_history",
+          "content": "Extract patient's medication history."
+        },
+        {
+          "name": "diagnosis",
+          "content": "Extract patient's patient's diagnosises with datetime."
+        }
+      ]
+    },
+    "reduce": {
+      "role": "You are a clinical expert. ",
+      "groups": [
+        {
+          "name": "Objective",
+          "scope": ["medication_history"]
+        },
+        {
+          "name": "Assessment",
+          "scope": ["diagnosis"]
+        }
+      ]
+    }
+  }
+}
