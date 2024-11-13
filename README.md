@@ -1,7 +1,9 @@
 # Instructions MapReduce
+## Background
 Similar with Hadoop MapReduce, but this time we map "instructions" into LLM's responses, and then reduce these response to the final results or next Map/Reduce's inputs.
 
 ## Architecture
+### Single MapReduce Flow
 ```mermaid
 graph TD
 Input[Input]
@@ -32,5 +34,19 @@ ReduceInstructionM --> LlmReducer
 LlmReducer --> ReduceOutput1(Reduce Output 1)
 LlmReducer --> ReduceOutput2(Reduce Output 2)
 LlmReducer --> ReduceOutputM(Reduce Output M)
+```
+
+### MapReduces Flow
+```mermaid
+graph TD
+OriginInputs[Original Inputs]
+OriginInputs --> Mapper1(Mapper 1)
+Mapper1 --> MappingOutputs1[Mapping Outputs 1]
+MappingOutputs1 --> Reducer1(Reducer 1)
+Reducer1 --> ReducerOutput1[Reducing Outputs 1]
+ReducerOutput1 --> Mapper2(Mapper 2)
+Mapper2 --> MappingOutputs2[Mapping Outputs 2]
+MappingOutputs2 --> Reducer2(Reducer 2)
+Reducer2 --> ReducerOutput2[Reducing Outputs 2]
 ```
 
