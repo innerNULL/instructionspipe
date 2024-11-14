@@ -43,13 +43,15 @@
     },
     "reduce": {
       "role": "You are a clinical expert. ",
-      "groups": [
+      "instructions": [
         {
           "name": "Objective",
+          "content": null,
           "scope": ["medication_history"]
         },
         {
           "name": "Assessment",
+          "content": null,
           "scope": ["diagnosis"]
         }
       ]

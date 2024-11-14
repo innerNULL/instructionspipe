@@ -33,24 +33,6 @@ INIT_GEN_SCHEMA: Dict = \
 }
 
 
-INIT_GEN_SCHEMA: Dict = \
-{
-    "type": "json_schema",
-    "json_schema": {
-        "name": "omission_complementation_schema",
-        "schema": {
-            "type": "object",
-            "properties": {
-                "content": {"type": "string"}
-            }, 
-            "required": ["content"],
-            "additionalProperties": False
-        },
-        "strict": True
-    }
-}
-
-
 def llm_resp_json_clean(in_json: str) -> str:
     return in_json.replace("```json", "").replace("```", "")
 
@@ -462,7 +444,7 @@ class SelfVerifiedMR:
             llm=llm,
             role=reduce_conf["role"],
             groups=[
-                Instruction.parse_obj(x) for x in reduce_conf["groups"]
+                Instruction.parse_obj(x) for x in reduce_conf["instructions"]
             ]
         )
         return out
