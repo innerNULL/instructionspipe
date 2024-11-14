@@ -148,22 +148,17 @@ class LlmCli:
         )
    
 
-class MapInstruction(BaseModel):
+class Instruction(BaseModel):
     name: str
-    content: str
-    msgs: Optional[List[Dict[str, str]]]=None
-
-
-class ReduceGroup(BaseModel):
-    name: str
-    scope: List[str] 
+    content: Optional[str]=None
+    scope: Optional[List[str]]=None
     msgs: Optional[List[Dict[str, str]]]=None
 
 
 class InstructionsMapper:
     def __init__(self):
         self.llm: Optional[LlmCli] = None
-        self.instructions: Optional[List[MapInstruction]] = None
+        self.instructions: Optional[List[Instruction]] = None
         self.role: Optional[str] = None
 
     @classmethod
@@ -171,7 +166,7 @@ class InstructionsMapper:
         cls,
         llm: LlmCli,
         role: str,
-        instructions: Optional[List[MapInstruction]]=None
+        instructions: Optional[List[Instruction]]=None
     ):
         out = cls()
         out.llm = llm
@@ -184,8 +179,8 @@ class SelfVerifiedMapper(InstructionsMapper):
     def build_extraction_chatml(
         self,
         input_text: str,
-        instruction: MapInstruction
-    ) -> MapInstruction:
+        instruction: Instruction
+    ) -> Instruction:
         msgs: List[Dict] = [
             {
                 "role": "system",
@@ -211,8 +206,8 @@ class SelfVerifiedMapper(InstructionsMapper):
     def build_omission_chatml(
         self,
         input_text: Optional[str],
-        instruction: MapInstruction
-    ) -> MapInstruction:
+        instruction: Instruction
+    ) -> Instruction:
         prompt: Dict = {
             "role": "user",
             "content": (
@@ -230,8 +225,8 @@ class SelfVerifiedMapper(InstructionsMapper):
     def build_evidence_chatml(
         self, 
         input_text: Optional[str],
-        instruction: MapInstruction
-    ) -> MapInstruction:
+        instruction: Instruction
+    ) -> Instruction:
         prompt: Dict = {
             "role": "user",
             "content": (
@@ -252,9 +247,9 @@ class SelfVerifiedMapper(InstructionsMapper):
     def build_chatmls(
         self, 
         input_text: str,
-        instructions: List[MapInstruction], 
+        instructions: List[Instruction], 
         fn: Callable
-    ) -> List[MapInstruction]:
+    ) -> List[Instruction]:
         for instruction in instructions:
             instruction = fn(input_text, instruction)
         return instructions
@@ -262,8 +257,8 @@ class SelfVerifiedMapper(InstructionsMapper):
     async def async_run_extraction(
         self,
         input_text: str,
-        instructions: List[MapInstruction]
-    ) -> List[MapInstruction]:
+        instructions: List[Instruction]
+    ) -> List[Instruction]:
         instructions = self.build_chatmls(
             input_text, instructions, self.build_extraction_chatml
         )
@@ -281,8 +276,8 @@ class SelfVerifiedMapper(InstructionsMapper):
 
     async def async_run_omission(
         self, 
-        instructions: List[MapInstruction]
-    ) -> List[MapInstruction]:
+        instructions: List[Instruction]
+    ) -> List[Instruction]:
         instructions = self.build_chatmls(
             None, instructions, self.build_omission_chatml
         )
@@ -300,8 +295,8 @@ class SelfVerifiedMapper(InstructionsMapper):
 
     async def async_run_evidence(
         self,
-        instructions: List[MapInstruction]
-    ) -> List[MapInstruction]:
+        instructions: List[Instruction]
+    ) -> List[Instruction]:
         instructions = self.build_chatmls(
             None, instructions, self.build_evidence_chatml
         )
@@ -319,15 +314,15 @@ class SelfVerifiedMapper(InstructionsMapper):
 
     async def async_run_prune_rule_based(
         self,
-        instructions: List[MapInstruction]
-    ) -> List[MapInstruction]:
+        instructions: List[Instruction]
+    ) -> List[Instruction]:
         return instructions
 
     async def async_run(
         self,
         input_text: str,
-        instructions: Optional[List[MapInstruction]]=None
-    ) -> List[MapInstruction]:
+        instructions: Optional[List[Instruction]]=None
+    ) -> List[Instruction]:
         if instructions is None:
             instructions = copy.deepcopy(self.instructions)
         assert(instructions is not None)
@@ -345,14 +340,14 @@ class InstructionsReducer:
     def __init__(self):
         self.llm: Optional[LlmCli] = None
         self.role: Optional[str] = None
-        self.groups: Optional[List[ReduceGroup]]=None
+        self.groups: Optional[List[Instruction]]=None
 
     @classmethod
     def new_with_llm(
         cls,
         llm: LlmCli,
         role: str,
-        groups: Optional[List[ReduceGroup]]=None
+        groups: Optional[List[Instruction]]=None
     ):
         out = cls()
         out.llm = llm
@@ -364,11 +359,11 @@ class InstructionsReducer:
 class RewritingReducer(InstructionsReducer):
     def build_chatml(
         self, 
-        instructions: List[MapInstruction],
-        group: ReduceGroup
-    ) -> ReduceGroup:
+        instructions: List[Instruction],
+        group: Instruction
+    ) -> Instruction:
         group.msgs = []
-        target_instructions: List[MapInstruction] = [
+        target_instructions: List[Instruction] = [
             x for x in instructions if x.name in group.scope
         ]
         target_data: str = ""
@@ -407,9 +402,9 @@ class RewritingReducer(InstructionsReducer):
 
     async def async_run_group(
         self, 
-        instructions: List[MapInstruction],
-        group: ReduceGroup
-    ) -> ReduceGroup:
+        instructions: List[Instruction],
+        group: Instruction
+    ) -> Instruction:
         group = self.build_chatml(instructions, group)
         resp: ChatCompletion = await self.llm.async_run(
             group.msgs[-1], group.msgs[:-1]
@@ -424,9 +419,9 @@ class RewritingReducer(InstructionsReducer):
 
     async def async_run(
         self,
-        instructions: List[MapInstruction],
-        groups: Optional[List[ReduceGroup]]=None
-    ) -> List[ReduceGroup]:
+        instructions: List[Instruction],
+        groups: Optional[List[Instruction]]=None
+    ) -> List[Instruction]:
         if groups is None:
             groups = copy.deepcopy(self.groups)
         assert(groups is not None)
@@ -441,9 +436,9 @@ class SelfVerifiedMR:
     def __init__(self):
         self.llm: Optional[LlmCli] = None
         self.map_role: Optional[str] = None
-        self.instructions: Optional[List[MapInstruction]] = None
+        self.instructions: Optional[List[Instruction]] = None
         self.reduce_role: Optional[str] = None
-        self.groups: Optional[List[ReduceGroup]] = None
+        self.groups: Optional[List[Instruction]] = None
         self.mapper: Optional[SelfVerifiedMappe] = None
         self.reducer: Optional[RewritingReducer] = None
 
@@ -460,24 +455,24 @@ class SelfVerifiedMR:
             llm=llm,
             role=map_conf["role"],
             instructions=[
-                MapInstruction.parse_obj(x) for x in map_conf["instructions"]
+                Instruction.parse_obj(x) for x in map_conf["instructions"]
             ]
         )
         out.reducer = RewritingReducer.new_with_llm(
             llm=llm,
             role=reduce_conf["role"],
             groups=[
-                ReduceGroup.parse_obj(x) for x in reduce_conf["groups"]
+                Instruction.parse_obj(x) for x in reduce_conf["groups"]
             ]
         )
         return out
 
     async def async_run(self, input_text: str) -> Dict:
         out: Dict = {}
-        instructions: List[MapInstruction] = (
+        instructions: List[Instruction] = (
             await self.mapper.async_run(input_text)
         )
-        groups: List[ReduceGroup] = (
+        groups: List[Instruction] = (
             await self.reducer.async_run(instructions)
         )
         result: str = ""
@@ -524,6 +519,7 @@ async def main() -> None:
             input_text += any_to_str(in_sample[col])
             input_text += "\n\n"
         output: Dict = await runner.async_run(input_text)
+        print(output["result"])
     return
 
 
