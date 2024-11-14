@@ -454,13 +454,13 @@ class SelfVerifiedMR:
         instructions: List[Instruction] = (
             await self.mapper.async_run(input_text)
         )
-        groups: List[Instruction] = (
+        instructions: List[Instruction] = (
             await self.reducer.async_run(instructions)
         )
         result: str = ""
-        for group in groups:
-            name: str = group.name
-            final_resp: str = group.msgs[-1]["content"]
+        for instruction in instructions:
+            name: str = instruction.name
+            final_resp: str = instruction.msgs[-1]["content"]
             result += "# {}\n".format(name)
             result += "{}\n".format(final_resp)
             result += "\n"
