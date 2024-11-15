@@ -149,7 +149,7 @@ def instructions_init_by_configs(
 ) -> Instructions:
     return Instructions(
         instructions=[
-            Instruction.parse_obj(x) for x in map_conf["instructions"]
+            Instruction.parse_obj(x) for x in conf
         ],
         result=None,
         finished=False
@@ -159,9 +159,9 @@ def instructions_init_by_configs(
 def instructions_to_output(
     instructions: Instructions
 ) -> Instructions:
-    for instruction in instructionsinstructions:
+    for instruction in instructions.instructions:
         if instruction.finished == False:
-            instructions.results = None
+            instructions.result = None
             break
         name: str = instruction.name
         val: Dict | List | str = instruction.msgs[-1]["content"]
@@ -169,6 +169,8 @@ def instructions_to_output(
             val = json.loads(llm_resp_json_clean(val))
         except Exception as e:
             pass
+        if instructions.result is None:
+            instructions.result = {}
         instructions.result[name] = val
     instructions.finished = True
     return instructions
@@ -177,7 +179,7 @@ def instructions_to_output(
 class InstructionsMapper:
     def __init__(self):
         self.llm: Optional[LlmCli] = None
-        self.instructions: Optional[List[Instruction]] = None
+        self.instructions: Optional[Instructions] = None
         self.role: Optional[str] = None
 
     @classmethod
@@ -185,7 +187,7 @@ class InstructionsMapper:
         cls,
         llm: LlmCli,
         role: str,
-        instructions: Optional[List[Instruction]]=None
+        instructions: Optional[Instructions]=None
     ):
         out = cls()
         out.llm = llm
@@ -357,18 +359,25 @@ class SelfVerifiedMapper(InstructionsMapper):
     async def async_run(
         self,
         prev_instructions: Instructions,
-        instructions: Optional[List[Instruction]]=None
+        instructions: Optional[Instructions]=None
     ) -> List[Instruction]:
         if instructions is None:
             instructions = copy.deepcopy(self.instructions)
         assert(instructions is not None)
-        assert(len(instructions) > 0)
-        instructions = await self.async_run_extraction(
-            prev_instructions.result, instructions
+        assert(len(instructions.instructions) > 0)
+        instructions.instructions = await self.async_run_extraction(
+            prev_instructions.result, instructions.instructions
         )
-        instructions = await self.async_run_omission(instructions)
-        instructions = await self.async_run_evidence(instructions)
-        instructions = await self.async_run_prune_rule_based(instructions)
+        instructions.instructions = await self.async_run_omission(
+            instructions.instructions
+        )
+        instructions.instructions = await self.async_run_evidence(
+            instructions.instructions
+        )
+        instructions.instructions = await self.async_run_prune_rule_based(
+            instructions.instructions
+        )
+        instructions_to_output(instructions)
         return instructions
 
 
@@ -376,31 +385,32 @@ class InstructionsReducer:
     def __init__(self):
         self.llm: Optional[LlmCli] = None
         self.role: Optional[str] = None
-        self.groups: Optional[List[Instruction]]=None
+        self.instructions: Optional[Instructions]=None
 
     @classmethod
     def new_with_llm(
         cls,
         llm: LlmCli,
         role: str,
-        groups: Optional[List[Instruction]]=None
+        instructions: Instructions=None
     ):
         out = cls()
         out.llm = llm
         out.role = role
-        out.groups = groups
+        out.instructions = instructions
         return out
 
 
 class RewritingReducer(InstructionsReducer):
     def build_chatml(
         self, 
-        instructions: List[Instruction],
-        group: Instruction
+        prev_instructions: Instructions,
+        instruction: Instruction
     ) -> Instruction:
-        group.msgs = []
+        instruction.msgs = []
         target_instructions: List[Instruction] = [
-            x for x in instructions if x.name in group.scope
+            x for x in prev_instructions.instructions 
+            if x.name in instruction.scope
         ]
         target_data: str = ""
         for instruction in target_instructions:
@@ -419,7 +429,7 @@ class RewritingReducer(InstructionsReducer):
                 .replace("__NAME__", name)\
                 .replace("__CONTENT__", json.dumps(map_output, indent=2))
    
-        group.msgs = [
+        instruction.msgs = [
             {
                 "role": "system",
                 "content": (
@@ -434,38 +444,42 @@ class RewritingReducer(InstructionsReducer):
                 "content": target_data
             }
         ]
-        return group
+        return instruction
 
     async def async_run_group(
         self, 
-        instructions: List[Instruction],
-        group: Instruction
+        prev_instructions: Instructions,
+        instruction: Instruction
     ) -> Instruction:
-        group = self.build_chatml(instructions, group)
+        instruction = self.build_chatml(prev_instructions, instruction)
         resp: ChatCompletion = await self.llm.async_run(
-            group.msgs[-1], group.msgs[:-1]
+            instruction.msgs[-1], instruction.msgs[:-1]
         ) 
-        group.msgs.append(
+        instruction.msgs.append(
             {
                 "role": "assistant",
                 "content": resp.choices[0].message.content
             }
         )
-        return group
+        instruction.finished = True
+        return instruction
 
     async def async_run(
         self,
-        instructions: List[Instruction],
-        groups: Optional[List[Instruction]]=None
-    ) -> List[Instruction]:
-        if groups is None:
-            groups = copy.deepcopy(self.groups)
-        assert(groups is not None)
-        assert(len(groups) > 0)
+        prev_instructions: Instructions,
+        instructions: Optional[Instructions]=None
+    ) -> Instructions:
+        if instructions is None:
+            instructions = copy.deepcopy(self.instructions)
+        assert(instructions is not None)
+        assert(len(instructions.instructions) > 0)
         tasks: List[Coroutine] = [
-            self.async_run_group(instructions, x) for x in groups
+            self.async_run_group(prev_instructions, x) 
+            for x in instructions.instructions
         ]
-        return await asyncio.gather(*tasks)
+        instructions.instructions = await asyncio.gather(*tasks)
+        instructions_to_output(instructions)
+        return instructions
 
 
 class SelfVerifiedMR:
@@ -490,29 +504,29 @@ class SelfVerifiedMR:
         out.mapper = SelfVerifiedMapper.new_with_llm(
             llm=llm,
             role=map_conf["role"],
-            instructions=[
-                Instruction.parse_obj(x) for x in map_conf["instructions"]
-            ]
+            instructions=instructions_init_by_configs(
+                map_conf["instructions"]
+            )
         )
         out.reducer = RewritingReducer.new_with_llm(
             llm=llm,
             role=reduce_conf["role"],
-            groups=[
-                Instruction.parse_obj(x) for x in reduce_conf["instructions"]
-            ]
+            instructions=instructions_init_by_configs(
+                reduce_conf["instructions"]
+            )
         )
         return out
 
-    async def async_run(self, input_text: str) -> Dict:
+    async def async_run(self, init_instructions: Instructions) -> Dict:
         out: Dict = {}
-        instructions: List[Instruction] = (
-            await self.mapper.async_run(input_text)
+        map_instructions: Instructions = (
+            await self.mapper.async_run(init_instructions)
         )
-        instructions: List[Instruction] = (
-            await self.reducer.async_run(instructions)
+        reduce_instructions: Instructions = (
+            await self.reducer.async_run(map_instructions)
         )
         result: str = ""
-        for instruction in instructions:
+        for instruction in reduce_instructions.instructions:
             name: str = instruction.name
             final_resp: str = instruction.msgs[-1]["content"]
             result += "# {}\n".format(name)
