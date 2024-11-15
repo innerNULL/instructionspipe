@@ -132,10 +132,47 @@ class LlmCli:
 
 class Instruction(BaseModel):
     name: str
-    content: Optional[str]=None
-    scope: Optional[List[str]]=None
-    msgs: Optional[List[Dict[str, str]]]=None
+    content: Optional[str] = None
+    scope: Optional[List[str]] = None
+    msgs: Optional[List[Dict[str, str]]] = None
+    finished: bool = False
 
+
+class Instructions(BaseModel):
+    instructions: List[Instruction]
+    result: Optional[Dict[str, Dict | List | str]] = None
+    finished: bool = False
+
+
+def instructions_init_by_configs(
+    conf: List[Dict]
+) -> Instructions:
+    return Instructions(
+        instructions=[
+            Instruction.parse_obj(x) for x in map_conf["instructions"]
+        ],
+        result=None,
+        finished=False
+    )
+
+
+def instructions_to_output(
+    instructions: Instructions
+) -> Instructions:
+    for instruction in instructionsinstructions:
+        if instruction.finished == False:
+            instructions.results = None
+            break
+        name: str = instruction.name
+        val: Dict | List | str = instruction.msgs[-1]["content"]
+        try:
+            val = json.loads(llm_resp_json_clean(val))
+        except Exception as e:
+            pass
+        instructions.result[name] = val
+    instructions.finished = True
+    return instructions
+        
 
 class InstructionsMapper:
     def __init__(self):
@@ -156,11 +193,25 @@ class InstructionsMapper:
         out.instructions = instructions
         return out
 
+    def inputs_proc(
+        self, 
+        input_data: Dict | List | str, 
+        instruction: Instruction
+    ) -> str:
+        if isinstance(input_data, dict):
+            if instruction.scope is not None:
+                input_data = {k: v for k in instruction.scope}
+            return json.dumps(input_data, indent=2, ensure_ascii=False)
+        elif isinstance(input_data, list):
+            return json.dumps(input_data, indent=2, ensure_ascii=False)
+        else:
+            return input_data
+
 
 class SelfVerifiedMapper(InstructionsMapper):
     def build_extraction_chatml(
         self,
-        input_text: str,
+        input_data: str,
         instruction: Instruction
     ) -> Instruction:
         msgs: List[Dict] = [
@@ -179,7 +230,7 @@ class SelfVerifiedMapper(InstructionsMapper):
             },
             {
                 "role": "user",
-                "content": input_text
+                "content": input_data
             }
         ]
         instruction.msgs = msgs
@@ -187,7 +238,7 @@ class SelfVerifiedMapper(InstructionsMapper):
 
     def build_omission_chatml(
         self,
-        input_text: Optional[str],
+        input_data: Optional[str],
         instruction: Instruction
     ) -> Instruction:
         prompt: Dict = {
@@ -206,7 +257,7 @@ class SelfVerifiedMapper(InstructionsMapper):
 
     def build_evidence_chatml(
         self, 
-        input_text: Optional[str],
+        input_data: Optional[str],
         instruction: Instruction
     ) -> Instruction:
         prompt: Dict = {
@@ -228,21 +279,22 @@ class SelfVerifiedMapper(InstructionsMapper):
 
     def build_chatmls(
         self, 
-        input_text: str,
+        input_data: Dict | List | str,
         instructions: List[Instruction], 
         fn: Callable
     ) -> List[Instruction]:
         for instruction in instructions:
+            input_text: str = self.inputs_proc(input_data, instruction)
             instruction = fn(input_text, instruction)
         return instructions
     
     async def async_run_extraction(
         self,
-        input_text: str,
+        input_data: str,
         instructions: List[Instruction]
     ) -> List[Instruction]:
         instructions = self.build_chatmls(
-            input_text, instructions, self.build_extraction_chatml
+            input_data, instructions, self.build_extraction_chatml
         )
         tasks: List[Coroutine] = [
             self.llm.async_run(chatml[-1], chatml[:-1]) for chatml in 
@@ -298,19 +350,21 @@ class SelfVerifiedMapper(InstructionsMapper):
         self,
         instructions: List[Instruction]
     ) -> List[Instruction]:
+        for instruction in instructions:
+            instruction.finished = True
         return instructions
 
     async def async_run(
         self,
-        input_text: str,
+        prev_instructions: Instructions,
         instructions: Optional[List[Instruction]]=None
     ) -> List[Instruction]:
         if instructions is None:
             instructions = copy.deepcopy(self.instructions)
         assert(instructions is not None)
         assert(len(instructions) > 0)
-        instructions = (
-            await self.async_run_extraction(input_text, instructions)
+        instructions = await self.async_run_extraction(
+            prev_instructions.result, instructions
         )
         instructions = await self.async_run_omission(instructions)
         instructions = await self.async_run_evidence(instructions)
@@ -495,12 +549,20 @@ async def main() -> None:
         if x not in {""}
     ]
     for in_sample in in_samples:
+        """
         input_text: str = ""
         for col in in_text_cols:
             input_text += "# %s\n" % col
             input_text += any_to_str(in_sample[col])
             input_text += "\n\n"
         output: Dict = await runner.async_run(input_text)
+        """
+        init_instructions: Instructions = Instructions(
+            instructions=[], 
+            result=in_sample, 
+            finished=True
+        )
+        output: Dict = await runner.async_run(init_instructions)
         print(output["result"])
     return
 
