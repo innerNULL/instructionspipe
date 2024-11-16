@@ -408,25 +408,23 @@ class RewritingReducer(InstructionsReducer):
         instruction: Instruction
     ) -> Instruction:
         instruction.msgs = []
+        inputs: Dict[str, Dict | List | str] = {
+            k: v for k, v in prev_instructions.result.items() 
+            if k in instruction.scope
+        }
         target_instructions: List[Instruction] = [
             x for x in prev_instructions.instructions 
             if x.name in instruction.scope
         ]
         target_data: str = ""
-        for instruction in target_instructions:
-            name: str = instruction.name
-            final_resp: str = llm_resp_json_clean(
-                instruction.msgs[-1]["content"]
-            )
-            map_output: List[str] = [
-                x["content"] for x in json.loads(final_resp)
-            ]
+        for input_name, input_data in inputs.items():
+            map_output: List[str] = [x["content"] for x in input_data]
             target_data += (
                 "<__NAME__>\n"
                 "__CONTENT__\n"
                 "</__NAME__>\n\n"
             )\
-                .replace("__NAME__", name)\
+                .replace("__NAME__", input_name)\
                 .replace("__CONTENT__", json.dumps(map_output, indent=2))
    
         instruction.msgs = [
@@ -551,7 +549,7 @@ async def main() -> None:
     ) 
 
     # Check
-    print("Testing LLM's response")
+    print("Testing LLM's connection")
     test_resp: Coroutine = llm.async_run("Hi")
     print("Running 'Hi'")
     test_result: str = (await test_resp).choices[0].message.content
@@ -563,14 +561,6 @@ async def main() -> None:
         if x not in {""}
     ]
     for in_sample in in_samples:
-        """
-        input_text: str = ""
-        for col in in_text_cols:
-            input_text += "# %s\n" % col
-            input_text += any_to_str(in_sample[col])
-            input_text += "\n\n"
-        output: Dict = await runner.async_run(input_text)
-        """
         init_instructions: Instructions = Instructions(
             instructions=[], 
             result=in_sample, 
