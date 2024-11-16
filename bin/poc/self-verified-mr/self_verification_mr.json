@@ -1,5 +1,5 @@
 {
-  "in_data_path": "./bin/poc/self-verified-mr/fake_data.jsonl",
+  "in_data_path": "../privatehub/interviews/outcomes-ai/20241105/data_adj.jsonl",
   "out_data_path": "./_element_mr_text.admission_note.jsonl",
   "in_text_cols": [
     "allergies",
@@ -68,6 +68,11 @@
           "name": "vital_signs",
           "content": "Extract all vital signs of the patient",
           "scope": null
+        },
+        {
+          "name": "notes",
+          "content": "Extract all historical clinical notes.",
+          "scope": null
         }
       ]
     },
@@ -82,18 +87,32 @@
           "scope": ["demography"]
         },
         {
+          "name": "Subjective",
+          "input_desc": "JSON data of patient's historical clinical notes, like progress note, admission note and discharge note.",
+          "output_desc": "A concise discription of subjective parts of patient's historical notes.",
+          "content": null,
+          "scope": ["notes", "encounters"]
+        },
+        {
           "name": "Objective",
           "input_desc": "A JSON which represent patient's historical data of medication, allergies, vital signs, lab tests.",
           "output_desc": "The natural language which lists key items in the input concisely.", 
           "content": null,
-          "scope": ["medication_history", "allergies", "vital_signs", "lab_tests"]
+          "scope": ["medication_history", "allergies", "vital_signs", "lab_tests", "notes"]
         },
         {
           "name": "Assessment",
           "input_desc": "A JSON which represents patients historical data of diagnosis.",
-          "output_desc": "The natural language which lists key items of the input.",
+          "output_desc": "The name of diagnosis, illness, and abnormal findings mentioned in the input.",
           "content": null,
-          "scope": ["diagnosis_history"]
+          "scope": ["diagnosis_history", "notes"]
+        },
+        {
+          "name": "Plan",
+          "input_desc": "A JSON which contains all kinds of SOAP notes of a patient",
+          "output_desc": "The treatment plans of the patient mentioned in the input.",
+          "content": null,
+          "scope": ["notes"]
         }
       ]
     }
