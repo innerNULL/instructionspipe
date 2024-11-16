@@ -56,7 +56,17 @@
         },
         {
           "name": "diagnosis_history",
-          "content": "Extract patient's patient's diagnosises with datetime.",
+          "content": "Extract patient's diagnosises with datetime.",
+          "scope": null
+        },
+        {
+          "name": "lab_tests",
+          "content": "Extract lab test results the patient had finished.",
+          "scope": null
+        },
+        {
+          "name": "vital_signs",
+          "content": "Extract all vital signs of the patient",
           "scope": null
         }
       ]
@@ -65,12 +75,23 @@
       "role": "You are a clinical expert. ",
       "instructions": [
         {
-          "name": "Objective",
+          "name": "Demography",
+          "input_desc": "JSON data of patient's demography.",
+          "output_desc": "A concise natural language description of the input.",
           "content": null,
-          "scope": ["medication_history"]
+          "scope": ["demography"]
+        },
+        {
+          "name": "Objective",
+          "input_desc": "A JSON which represent patient's historical data of medication, allergies, vital signs, lab tests.",
+          "output_desc": "The natural language which lists key items in the input concisely.", 
+          "content": null,
+          "scope": ["medication_history", "allergies", "vital_signs", "lab_tests"]
         },
         {
           "name": "Assessment",
+          "input_desc": "A JSON which represents patients historical data of diagnosis.",
+          "output_desc": "The natural language which lists key items of the input.",
           "content": null,
           "scope": ["diagnosis_history"]
         }

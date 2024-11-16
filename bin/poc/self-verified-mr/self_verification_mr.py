@@ -33,6 +33,21 @@ INIT_GEN_SCHEMA: Dict = \
 }
 
 
+GENERAL_INSTRUCTION_TEMP: str = \
+"""
+## Your Role
+__ROLE__
+
+## Your Given Input
+Your input: __INPUT_DESC__
+
+## The Expected Output
+Expected Output: __OUTPUT_DESC__
+
+Based on above information, you need generate output based on given input.
+"""
+
+
 def llm_resp_json_clean(in_json: str) -> str:
     return in_json.replace("```json", "").replace("```", "")
 
@@ -132,6 +147,8 @@ class LlmCli:
 
 class Instruction(BaseModel):
     name: str
+    input_desc: Optional[str] = None
+    output_desc: Optional[str] = None
     content: Optional[str] = None
     scope: Optional[List[str]] = None
     msgs: Optional[List[Dict[str, str]]] = None
@@ -430,12 +447,10 @@ class RewritingReducer(InstructionsReducer):
         instruction.msgs = [
             {
                 "role": "system",
-                "content": (
-                    "__ROLE__ \n"
-                    "Your task is to rewrite given semi-structured data "
-                    "into natural language description. "
-                )\
+                "content": GENERAL_INSTRUCTION_TEMP\
                     .replace("__ROLE__", self.role)\
+                    .replace("__INPUT_DESC__", instruction.input_desc)\
+                    .replace("__OUTPUT_DESC__", instruction.output_desc)
             },
             {
                 "role": "user",
