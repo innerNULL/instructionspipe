@@ -40,8 +40,8 @@
           "scope": null
         },
         {
-          "name": "latest_reason_to_visit",
-          "content": "Extract patient's latest encounter's cheif complaints.",
+          "name": "chef_complaints_history",
+          "content": "Extract all patient's historical chef complaints.",
           "scope": null
         },
         {
@@ -80,7 +80,7 @@
           "scope": null
         },
         {
-          "name": "assessment",
+          "name": "assessments",
           "content": "Extract all assessments in historical clinical notes.",
           "scope": null
         },
@@ -102,7 +102,7 @@
           "scope": ["demography"]
         },
         {
-          "name": "Persoanl Histories",
+          "name": "Personal Histories",
           "input_desc": "Patient's allergies and medication history.",
           "output_desc": "A concise list of allergies and medications the patient has or had before.",
           "scope": ["medication_history", "allergies"]
@@ -112,7 +112,7 @@
           "input_desc": "Subjectives part off all historical notes, and all admission information.",
           "output_desc": "A concise list of chef complaints and reason to visit hospital.",
           "content": null,
-          "scope": ["subjectives", "encounters"]
+          "scope": ["subjectives", "chef_complaints_history"]
         },
         {
           "name": "(Historical) Objectives",
