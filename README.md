@@ -72,17 +72,19 @@ All LLMs calling in this implementation are done via `async` in Python, which me
 
 Especially for mapping, it's kind of split a single prompt into several small units and run them at same time. If not, when you have a long input, you may have to generate a long output token by token sequentially. But with mapping, you can have multiple inference run at same time, each will generate a much shorter output. Of course this also means the you need run inference for prefix conditioning multiple time. But as this stage is naturally faster than decoding, not mention we can have some **prefix cache** machemanism, the overall latency should be still more friendly.
 
-### Information Retrieval
+### (Custmoized) Information Retrieval
 When input is too long, there's higher probability of hallucination and missing information. So for each instruction, instead of feeding all inputs, we can only feed relevant information to LLMs to follow instruction.
 
 To do above, we first have each mapper/reduce have a JSON input, which each key corresponding with one data. In defination of struct `Instruction`, there's an member variable called `scope`, which can define to follow this instruction, which fields from inputs will be used.
 
-### Omission & Hallucination
+### Omission & Hallucination Checking
 As each map/reduce is an independent LLM calling, you can fit any prompt-engineering based text generation technique in the concrete mapper/reducer implementation to solve the problem of omission & hallucination problems.
 
 ## Drawbacks
-### Can Not Streaming
-### High Latency
+### Can Not Streaming E2E
+As each map/reduce (except the initial ones) depends on previous map/reduce's outputs, so we can only streaming the last input but not the intermediate ones.
+### Can Not 100% Eliminate Hallucinations and Omissions
+This is for sure for all LLMs based solutions.
 
 ## Q&A
 * For long document, why don't RAG to retrive most relevant parts?
