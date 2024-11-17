@@ -70,8 +70,23 @@
           "scope": null
         },
         {
-          "name": "notes",
-          "content": "Extract all historical clinical notes.",
+          "name": "subjectives",
+          "content": "Extract all subjectives in historical clinical notes.",
+          "scope": null
+        },
+        {
+          "name": "objectives",
+          "content": "Extract all objectives in historical clinical notes.",
+          "scope": null
+        },
+        {
+          "name": "assessment",
+          "content": "Extract all assessments in historical clinical notes.",
+          "scope": null
+        },
+        {
+          "name": "plans",
+          "content": "Extract all treatments in historical clinical notes.",
           "scope": null
         }
       ]
@@ -87,32 +102,38 @@
           "scope": ["demography"]
         },
         {
-          "name": "Subjective",
-          "input_desc": "JSON data of patient's historical clinical notes, like progress note, admission note and discharge note.",
-          "output_desc": "A concise discription of subjective parts of patient's historical notes.",
-          "content": null,
-          "scope": ["notes", "encounters"]
+          "name": "Persoanl Histories",
+          "input_desc": "Patient's allergies and medication history.",
+          "output_desc": "A concise list of allergies and medications the patient has or had before.",
+          "scope": ["medication_history", "allergies"]
         },
         {
-          "name": "Objective",
-          "input_desc": "A JSON which represent patient's historical data of medication, allergies, vital signs, lab tests.",
-          "output_desc": "The natural language which lists key items in the input concisely.", 
+          "name": "(Historical) Subjectives",
+          "input_desc": "Subjectives part off all historical notes, and all admission information.",
+          "output_desc": "A concise list of chef complaints and reason to visit hospital.",
           "content": null,
-          "scope": ["medication_history", "allergies", "vital_signs", "lab_tests", "notes"]
+          "scope": ["subjectives", "encounters"]
         },
         {
-          "name": "Assessment",
-          "input_desc": "A JSON which represents patients historical data of diagnosis.",
-          "output_desc": "The name of diagnosis, illness, and abnormal findings mentioned in the input.",
+          "name": "(Historical) Objectives",
+          "input_desc": "Patient's all vital signs, lab tests, and objectives part of historical clinical notes.",
+          "output_desc": "A concise list of vital signs, lab tests, and all observations in objectives part of notes.", 
           "content": null,
-          "scope": ["diagnosis_history", "notes"]
+          "scope": ["vital_signs", "lab_tests", "objectives"]
         },
         {
-          "name": "Plan",
-          "input_desc": "A JSON which contains all kinds of SOAP notes of a patient",
-          "output_desc": "The treatment plans of the patient mentioned in the input.",
+          "name": "(Historical) Assessments",
+          "input_desc": "A patient's diagnosis history, also will all assessment part of historical clinical notes.",
+          "output_desc": "A Concise list of diagnosis, illness, and abnormal findings the patient has or had before.",
           "content": null,
-          "scope": ["notes"]
+          "scope": ["diagnosis_history", "assessments"]
+        },
+        {
+          "name": "(Historical) Plans",
+          "input_desc": "All plan part of historical clinical notes.",
+          "output_desc": "A concise list of treatment plans, prescriptions the patient has or had before.",
+          "content": null,
+          "scope": ["plans"]
         }
       ]
     }
