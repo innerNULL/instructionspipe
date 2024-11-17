@@ -1,18 +1,16 @@
 {
-  "in_data_path": "./bin/poc/self-verified-mr/fake_data.jsonl",
+  "in_data_path": "../privatehub/interviews/outcomes-ai/20241105/data_adj.jsonl",
   "out_data_path": "./_element_mr_text.admission_note.jsonl",
   "in_text_cols": [
-    "admission_note",
-    "age",
-    "discharge_note",
-    "family_history",
-    "gender",
-    "lab_tests",
-    "medication_history",
-    "nursing_note",
-    "progress_notes",
-    "surgery_notes",
-    "vital_signs"
+    "allergies",
+    "diagnosis",
+    "encounters",
+    "labs",
+    "medications",
+    "notes",
+    "patient",
+    "procedures",
+    "visits"
   ],
   "output_col": "results",
   "port": "8765",
@@ -24,7 +22,7 @@
     "model": "gpt-4o-mini",
     "sampling": true, 
     "temperature": 0.0,
-    "top_p": 0.01,
+    "top_p": 0.0001,
     "seed": 2
   },
   "runner": {
@@ -32,25 +30,110 @@
       "role": "You are a clinical expert. ",
       "instructions": [
         {
-          "name": "medication_history",
-          "content": "Extract patient's medication history."
+          "name": "demography",
+          "content": "Extract patient's demography info.",
+          "scope": null
         },
         {
-          "name": "diagnosis",
-          "content": "Extract patient's patient's diagnosises with datetime."
+          "name": "allergies",
+          "content": "Extract patient's allergies.",
+          "scope": null
+        },
+        {
+          "name": "chef_complaints_history",
+          "content": "Extract all patient's historical chef complaints.",
+          "scope": null
+        },
+        {
+          "name": "illness_history",
+          "content": "Extract illness from patient's historical SOAP notes.",
+          "scope": null
+        },
+        {
+          "name": "medication_history",
+          "content": "Extract patient's medication history.",
+          "scope": null
+        },
+        {
+          "name": "diagnosis_history",
+          "content": "Extract patient's diagnosises with datetime.",
+          "scope": null
+        },
+        {
+          "name": "lab_tests",
+          "content": "Extract lab test results the patient had finished.",
+          "scope": null
+        },
+        {
+          "name": "vital_signs",
+          "content": "Extract all vital signs of the patient",
+          "scope": null
+        },
+        {
+          "name": "subjectives",
+          "content": "Extract all subjectives in historical clinical notes.",
+          "scope": null
+        },
+        {
+          "name": "objectives",
+          "content": "Extract all objectives in historical clinical notes.",
+          "scope": null
+        },
+        {
+          "name": "assessments",
+          "content": "Extract all assessments in historical clinical notes.",
+          "scope": null
+        },
+        {
+          "name": "plans",
+          "content": "Extract all treatments in historical clinical notes.",
+          "scope": null
         }
       ]
     },
     "reduce": {
       "role": "You are a clinical expert. ",
-      "groups": [
+      "instructions": [
         {
-          "name": "Objective",
-          "scope": ["medication_history"]
+          "name": "Demography",
+          "input_desc": "JSON data of patient's demography.",
+          "output_desc": "A concise natural language description of the input.",
+          "content": null,
+          "scope": ["demography"]
         },
         {
-          "name": "Assessment",
-          "scope": ["diagnosis"]
+          "name": "Personal Histories",
+          "input_desc": "Patient's allergies and medication history.",
+          "output_desc": "A concise list of allergies and medications the patient has or had before.",
+          "scope": ["medication_history", "allergies"]
+        },
+        {
+          "name": "(Historical) Subjectives",
+          "input_desc": "Subjectives part off all historical notes, and all admission information.",
+          "output_desc": "A concise list of chef complaints and reason to visit hospital.",
+          "content": null,
+          "scope": ["subjectives", "chef_complaints_history"]
+        },
+        {
+          "name": "(Historical) Objectives",
+          "input_desc": "Patient's all vital signs, lab tests, and objectives part of historical clinical notes.",
+          "output_desc": "A concise list of vital signs, lab tests, and all observations in objectives part of notes.", 
+          "content": null,
+          "scope": ["vital_signs", "lab_tests", "objectives"]
+        },
+        {
+          "name": "(Historical) Assessments",
+          "input_desc": "A patient's diagnosis history, also will all assessment part of historical clinical notes.",
+          "output_desc": "A Concise list of diagnosis, illness, and abnormal findings the patient has or had before.",
+          "content": null,
+          "scope": ["diagnosis_history", "assessments"]
+        },
+        {
+          "name": "(Historical) Plans",
+          "input_desc": "All plan part of historical clinical notes.",
+          "output_desc": "A concise list of treatment plans, prescriptions the patient has or had before.",
+          "content": null,
+          "scope": ["plans"]
         }
       ]
     }
