@@ -1,6 +1,7 @@
 # Instructions MapReduce
 ## Background
 Nowadays LLMs are very popular with text generation tasks (like QA and summarization), but there are still some potential blockers prevent users having high quality results:
+* **Customized Domain Knowledge**: Here my suggestion is domain knowledges are kind of general, it's better if we allow user to define how are they going to use domain knowledges.
 * **Omission**: LLMs can not get user's intention very clearly, so it will casually miss sth important.
 * **Hallucination**
 * **Long Input**: Sometimes the input text can be vary long, which will increase the chance of omission and hallucination, also cause high latency.
