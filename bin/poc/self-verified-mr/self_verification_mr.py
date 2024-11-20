@@ -7,6 +7,7 @@ import pdb
 import asyncio
 import sys
 import os
+import traceback
 import copy
 import json
 from typing import Union, Optional, List, Dict, Coroutine, Callable, Any
@@ -106,7 +107,8 @@ class LlmCli:
     def run(self, 
         msg: Union[str, Dict], 
         prefix: Union[Dict, List[Dict]]=None, 
-        json_schema: Optional[Dict]=None
+        json_schema: Optional[Dict]=None,
+        temperature: Optional[float]=None
     ) -> ChatCompletion:
         if isinstance(msg, str):
             msg = {"role": "user", "content": msg}
@@ -118,7 +120,10 @@ class LlmCli:
             model=self.model, 
             messages=prefix + [msg],
             seed=self.seed,
-            temperature=self.temperature,
+            temperature=(
+                temperature if temperature is not None 
+                else self.temperature
+            ),
             top_p=self.top_p,
             response_format=json_schema
         )
@@ -219,7 +224,7 @@ class InstructionsMapper:
     ) -> str:
         if isinstance(input_data, dict):
             if instruction.scope is not None:
-                input_data = {k: v for k in instruction.scope}
+                input_data = {k: v for k, v in input_data.items() if k in instruction.scope}
             return json.dumps(input_data, indent=2, ensure_ascii=False)
         elif isinstance(input_data, list):
             return json.dumps(input_data, indent=2, ensure_ascii=False)
@@ -233,6 +238,27 @@ class SelfVerifiedMapper(InstructionsMapper):
         input_data: str,
         instruction: Instruction
     ) -> Instruction:
+        try:
+            input_json: Dict = json.loads(input_data)
+            if instruction.scope is not None:
+                proc_json: Dict = {}
+                for k, v in input_json.items():
+                    if k not in instruction.scope:
+                        continue
+                    if isinstance(v, str):
+                        proc_json[k] = v
+                    else:
+                        proc_json[k] = json.dumps(
+                            v, indent=2, ensure_ascii=False
+                        )
+                input_data = json.dumps(
+                    proc_json, indent=2, ensure_ascii=False
+                )
+        except Exception as e:
+            print("Input data is not able to serialize to JSON.")
+            #print(traceback.format_exc())
+            #pdb.set_trace()
+
         msgs: List[Dict] = [
             {
                 "role": "system",

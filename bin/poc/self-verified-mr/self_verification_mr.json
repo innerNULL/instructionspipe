@@ -1,5 +1,5 @@
 {
-  "in_data_path": "../privatehub/interviews/outcomes-ai/20241105/data_adj.jsonl",
+  "in_data_path": "./bin/poc/self-verified-mr/fake_data.jsonl",
   "out_data_path": "./_element_mr_text.admission_note.jsonl",
   "in_text_cols": [
     "allergies",
@@ -32,62 +32,62 @@
         {
           "name": "demography",
           "content": "Extract patient's demography info.",
-          "scope": null
+          "scope": ["patient"]
         },
         {
           "name": "allergies",
           "content": "Extract patient's allergies.",
-          "scope": null
+          "scope": ["allergies"]
         },
         {
           "name": "chef_complaints_history",
           "content": "Extract all patient's historical chef complaints.",
-          "scope": null
+          "scope": ["encounters", "visits", "notes"]
         },
         {
           "name": "illness_history",
           "content": "Extract illness from patient's historical SOAP notes.",
-          "scope": null
+          "scope": ["patient", "notes"]
         },
         {
           "name": "medication_history",
           "content": "Extract patient's medication history.",
-          "scope": null
+          "scope": ["medications"]
         },
         {
           "name": "diagnosis_history",
           "content": "Extract patient's diagnosises with datetime.",
-          "scope": null
+          "scope": ["notes"]
         },
         {
           "name": "lab_tests",
           "content": "Extract lab test results the patient had finished.",
-          "scope": null
+          "scope": ["labs"]
         },
         {
           "name": "vital_signs",
           "content": "Extract all vital signs of the patient",
-          "scope": null
+          "scope": ["notes"]
         },
         {
           "name": "subjectives",
           "content": "Extract all subjectives in historical clinical notes.",
-          "scope": null
+          "scope": ["notes"]
         },
         {
           "name": "objectives",
           "content": "Extract all objectives in historical clinical notes.",
-          "scope": null
+          "scope": ["notes", "labs"]
         },
         {
           "name": "assessments",
           "content": "Extract all assessments in historical clinical notes.",
-          "scope": null
+          "scope": ["notes"]
         },
         {
           "name": "plans",
           "content": "Extract all treatments in historical clinical notes.",
-          "scope": null
+          "scope": ["notes"]
         }
       ]
     },
