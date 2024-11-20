@@ -12,7 +12,7 @@ import copy
 import json
 from typing import Union, Optional, List, Dict, Coroutine, Callable, Any
 from pydantic import BaseModel
-from openai import OpenAI, AsyncOpenAI
+from openai import AsyncOpenAI, AsyncAzureOpenAI
 from openai import ChatCompletion
 
 
@@ -86,7 +86,6 @@ class LlmCli:
         top_p: float=0.01
     ):
         out = cls()
-        out.cli =  OpenAI(api_key=api_key, base_url=api_url)
         out.async_cli = AsyncOpenAI(api_key=api_key, base_url=api_url)
         out.model = model
         out.seed = seed
@@ -102,30 +101,6 @@ class LlmCli:
             api_url=configs["api_url"],
             temperature=configs["temperature"],
             seed=configs["seed"]
-        )
-
-    def run(self, 
-        msg: Union[str, Dict], 
-        prefix: Union[Dict, List[Dict]]=None, 
-        json_schema: Optional[Dict]=None,
-        temperature: Optional[float]=None
-    ) -> ChatCompletion:
-        if isinstance(msg, str):
-            msg = {"role": "user", "content": msg}
-        if prefix is None:
-            prefix = []
-        if isinstance(prefix, dict):
-            prefix = [prefix]
-        return self.cli.chat.completions.create(
-            model=self.model, 
-            messages=prefix + [msg],
-            seed=self.seed,
-            temperature=(
-                temperature if temperature is not None 
-                else self.temperature
-            ),
-            top_p=self.top_p,
-            response_format=json_schema
         )
 
     async def async_run(
