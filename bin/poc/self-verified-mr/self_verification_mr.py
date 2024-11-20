@@ -68,7 +68,7 @@ def any_to_str(in_data: Any) -> str:
 
 class LlmCli:
     def __init__(self):
-        self.cli: Optional[OpenAI] = None
+        self.cli: Optional[OpenAI | AsyncAzureOpenAI] = None
         self.async_cli: Optional[AsyncOpenAI] = None
         self.model: Optional[str] = None
         self.seed: Optional[int] = None
@@ -82,11 +82,21 @@ class LlmCli:
         api_key: str,
         api_url: str, 
         seed: int=2, 
+        api_type: str="openai",
+        api_version: str="",
         temperature: float=0.0, 
         top_p: float=0.01
     ):
         out = cls()
-        out.async_cli = AsyncOpenAI(api_key=api_key, base_url=api_url)
+        if api_type == "openai":
+            out.async_cli = AsyncOpenAI(api_key=api_key, base_url=api_url)
+        # Refer to https://elanthirayan.medium.com/using-azure-openai-with-python-a-step-by-step-guide-415d5850169b
+        elif api_type == "azure":
+            out.async_cli = AsyncAzureOpenAI(
+                azure_endpoint=api_url, 
+                api_version=api_version,
+                api_key=api_key
+            )
         out.model = model
         out.seed = seed
         out.temperature = temperature
@@ -100,7 +110,9 @@ class LlmCli:
             api_key=configs["api_key"],
             api_url=configs["api_url"],
             temperature=configs["temperature"],
-            seed=configs["seed"]
+            seed=configs["seed"],
+            api_type=configs["api_type"],
+            api_version=configs["api_version"]
         )
 
     async def async_run(
