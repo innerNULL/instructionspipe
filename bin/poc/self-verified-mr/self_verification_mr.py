@@ -119,7 +119,9 @@ class LlmCli:
         self, 
         msg: Union[str, Dict],
         prefix: Union[Dict, List[Dict]]=None,
-        json_schema: Optional[Dict]=None
+        json_schema: Optional[Dict]=None,
+        temperature: Optional[float]=None, 
+        max_tokens: int=320
     ):
         if isinstance(msg, str):
             msg = {"role": "user", "content": msg}
@@ -131,7 +133,8 @@ class LlmCli:
             model=self.model, 
             messages=prefix + [msg],
             seed=self.seed,
-            temperature=self.temperature,
+            temperature=self.temperature if temperature is None else temperature,
+            max_tokens=max_tokens,
             top_p=self.top_p,
             response_format=json_schema
         )
@@ -173,11 +176,14 @@ def instructions_to_output(
             instructions.result = None
             break
         name: str = instruction.name
+        val: str = instruction.msgs[-1]["content"]
+        """
         val: Dict | List | str = instruction.msgs[-1]["content"]
         try:
             val = json.loads(llm_resp_json_clean(val))
         except Exception as e:
             pass
+        """
         if instructions.result is None:
             instructions.result = {}
         instructions.result[name] = val
@@ -438,24 +444,31 @@ class RewritingReducer(InstructionsReducer):
         instruction: Instruction
     ) -> Instruction:
         instruction.msgs = []
+        """
         inputs: Dict[str, Dict | List | str] = {
             k: v for k, v in prev_instructions.result.items() 
             if k in instruction.scope
         }
-        target_instructions: List[Instruction] = [
-            x for x in prev_instructions.instructions 
-            if x.name in instruction.scope
-        ]
+        """
+        inputs: Dict[str, str] = {
+            k: v for k, v in prev_instructions.result.items()
+            if k in instruction.scope
+        }
         target_data: str = ""
         for input_name, input_data in inputs.items():
-            map_output: List[str] = [x["content"] for x in input_data]
+            """
+            map_output: str = json.dumps(
+                [x["content"] for x in input_data], indent=2
+            )
+            """
+            map_output: str = input_data
             target_data += (
                 "<__NAME__>\n"
                 "__CONTENT__\n"
                 "</__NAME__>\n\n"
             )\
                 .replace("__NAME__", input_name)\
-                .replace("__CONTENT__", json.dumps(map_output, indent=2))
+                .replace("__CONTENT__", map_output)
    
         instruction.msgs = [
             {
