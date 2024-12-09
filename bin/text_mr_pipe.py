@@ -33,17 +33,17 @@ async def main() -> None:
     print(configs)
     in_data_path: str = configs["in_data_path"]
     out_data_path: str = configs["out_data_path"]
-    map_conf: Dict = configs["runner"]["map"]
-    reduce_conf: Dict = configs["runner"]["reduce"]
+    map_conf: Dict = configs["pipe"][0]
+    reduce_conf: Dict = configs["pipe"][1]
  
     llm: LlmCli = LlmCli.new_with_configs(configs["llm"])
     mapper: InstructionsRunnerBase = InstructionsRunnerBase.new_with_llm(
         llm=llm, 
-        instructions=instructions_init_by_configs(map_conf["instructions"])
+        instructions=instructions_init_by_configs(map_conf)
     )
     reducer: InstructionsRunnerBase = InstructionsRunnerBase.new_with_llm(
         llm=llm, 
-        instructions=instructions_init_by_configs(reduce_conf["instructions"])
+        instructions=instructions_init_by_configs(reduce_conf)
     )
 
     # Check
@@ -77,6 +77,7 @@ async def main() -> None:
             "result": instructions_to_md(reduce_instructions)
         }
         in_sample["results"] = outputs
+        pdb.set_trace()
         out_file.write(
             json.dumps(in_sample, ensure_ascii=False) + "\n"
         )
