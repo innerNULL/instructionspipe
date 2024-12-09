@@ -8,6 +8,17 @@ Nowadays LLMs are very popular with text generation tasks (like QA and summariza
 
 To solve above problems, here I propose **InstructionsMR** framework. This is similar with Hadoop MapReduce, but here we map "instructions" into LLM's responses, and then reduce these response to the final results or next Map/Reduce's inputs.
 
+## Quick Start
+### (Start LLM Server on Local)
+Start SGLanag:
+```shell
+CUDA_VISIBLE_DEVICES=2,3 python3 -m sglang.launch_server --model-path hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4 --port 8765 --host 127.0.0.1 --quantization awq --tensor-parallel-size 2 --device cuda --dtype auto
+```
+Start vLLM:
+```shell
+CUDA_VISIBLE_DEVICES=0,1,2,3 vllm serve hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4 --dtype bfloat16 --max_model_len 50000 --tensor-parallel-size 4 --gpu-memory-utilization 0.5 --enable-prefix-caching --port 8765
+```
+
 ## Architecture
 ### Single MapReduce Flow
 ```mermaid
