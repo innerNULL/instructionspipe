@@ -1,0 +1,90 @@
+# -*- coding: utf-8 -*-
+# file: self_verification_mr.py
+# date: 2024-11-09
+
+
+import sys
+import os
+sys.path.append(
+    os.path.join(os.path.dirname(__file__), "../src/python")
+)
+import pdb
+import asyncio
+import traceback
+import copy
+import json
+from tqdm import tqdm
+from typing import Union, Optional, List, Dict, Coroutine, Callable, Any
+from pydantic import BaseModel
+from openai import AsyncOpenAI, AsyncAzureOpenAI
+from openai import ChatCompletion
+
+from utils import json2str_kv
+from instructions import instructions_init_by_configs
+from instructions import instructions_to_output
+from instructions import instructions_to_md
+from instructions import Instruction, Instructions
+from instructions_runners import InstructionsRunnerBase
+from llm_cli import LlmCli
+
+
+async def main() -> None:
+    configs: Dict = json.loads(open(sys.argv[1], "r").read())
+    print(configs)
+    in_data_path: str = configs["in_data_path"]
+    out_data_path: str = configs["out_data_path"]
+    in_text_cols: str = configs["in_text_cols"]
+    output_col: str = configs["output_col"]
+    map_conf: Dict = configs["runner"]["map"]
+    reduce_conf: Dict = configs["runner"]["reduce"]
+ 
+    llm: LlmCli = LlmCli.new_with_configs(configs["llm"])
+    mapper: InstructionsRunnerBase = InstructionsRunnerBase.new_with_llm(
+        llm=llm, 
+        instructions=instructions_init_by_configs(map_conf["instructions"])
+    )
+    reducer: InstructionsRunnerBase = InstructionsRunnerBase.new_with_llm(
+        llm=llm, 
+        instructions=instructions_init_by_configs(reduce_conf["instructions"])
+    )
+
+    # Check
+    print("Testing LLM's connection")
+    test_resp: Coroutine = llm.async_run("Hi")
+    print("Running 'Hi'")
+    test_result: str = (await test_resp).choices[0].message.content
+    print(test_result)
+    print("Testing finished")
+
+    in_samples: List[Dict] = [
+        json.loads(x) for x in open(in_data_path, "r").read().split("\n")
+        if x not in {""}
+    ]
+    out_file = open(out_data_path, "w") 
+    for in_sample in tqdm(in_samples):
+        init_instructions: Instructions = Instructions(
+            instructions=[], 
+            result=json2str_kv(in_sample), 
+            finished=True
+        )
+        map_instructions: Instructions = (
+            await mapper.async_run(init_instructions)
+        )
+        reduce_instructions: Instructions = (
+            await reducer.async_run(map_instructions)
+        )
+        outputs: Dict = {
+            "map_results": map_instructions.result, 
+            "reduce_results": reduce_instructions.result,
+            "result": instructions_to_md(reduce_instructions)
+        }
+        in_sample["results"] = outputs
+        out_file.write(
+            json.dumps(in_sample, ensure_ascii=False) + "\n"
+        )
+    out_file.close()
+    return
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
