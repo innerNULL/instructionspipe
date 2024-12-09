@@ -1,19 +1,6 @@
 {
   "in_data_path": "./demo_data/ehr/faked_0.jsonl",
   "out_data_path": "./_text_mr.jsonl",
-  "in_text_cols": [
-    "allergies",
-    "diagnosis",
-    "encounters",
-    "labs",
-    "medications",
-    "notes",
-    "patient",
-    "procedures",
-    "visits"
-  ],
-  "output_col": "results",
-  "port": "8765",
   "llm": {
     "api_type": "openai",
     "api_url": "http://0.0.0.0:8088/v1",

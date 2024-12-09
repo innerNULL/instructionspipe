@@ -33,8 +33,6 @@ async def main() -> None:
     print(configs)
     in_data_path: str = configs["in_data_path"]
     out_data_path: str = configs["out_data_path"]
-    in_text_cols: str = configs["in_text_cols"]
-    output_col: str = configs["output_col"]
     map_conf: Dict = configs["runner"]["map"]
     reduce_conf: Dict = configs["runner"]["reduce"]
  
