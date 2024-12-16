@@ -50,7 +50,7 @@ class InstructionsRunnerBase:
     ) -> str:
         out: str = ""
         if instruction.content is not None:
-            out += "%s\n\n" % instruction.content
+            out += "## Instruction\n%s\n\n" % instruction.content
         if instruction.role is not None:
             out += "## Your Role\n%s\n\n" % instruction.role
         if instruction.input_desc is not None:

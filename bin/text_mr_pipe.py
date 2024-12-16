@@ -77,7 +77,6 @@ async def main() -> None:
             "result": instructions_to_md(reduce_instructions)
         }
         in_sample["results"] = outputs
-        pdb.set_trace()
         out_file.write(
             json.dumps(in_sample, ensure_ascii=False) + "\n"
         )
