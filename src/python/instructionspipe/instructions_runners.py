@@ -8,9 +8,9 @@ import asyncio
 import json
 from typing import Union, Optional, List, Dict, Coroutine, Callable, Any
 
-from instructions import instructions_to_output
-from llm_cli import LlmCli
-from instructions import Instructions, Instruction
+from .instructions import instructions_to_output
+from .llm_cli import LlmCli
+from .instructions import Instructions, Instruction
 
 
 class InstructionsRunnerBase:
@@ -50,7 +50,7 @@ class InstructionsRunnerBase:
     ) -> str:
         out: str = ""
         if instruction.content is not None:
-            out += "%s\n\n" % instruction.content
+            out += "## Instruction\n%s\n\n" % instruction.content
         if instruction.role is not None:
             out += "## Your Role\n%s\n\n" % instruction.role
         if instruction.input_desc is not None:

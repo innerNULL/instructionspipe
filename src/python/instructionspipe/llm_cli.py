@@ -63,7 +63,7 @@ class LlmCli:
         prefix: Union[Dict, List[Dict]]=None,
         json_schema: Optional[Dict]=None,
         temperature: Optional[float]=None, 
-        max_tokens: int=320
+        max_tokens: int=4096
     ):
         if isinstance(msg, str):
             msg = {"role": "user", "content": msg}
