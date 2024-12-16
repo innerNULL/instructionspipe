@@ -53,4 +53,4 @@ async def run_with_configs(
         "reduce_results": reduce_instructions.result,
         "result": instructions_to_md(reduce_instructions)
     }
-    return None
+    return outputs
