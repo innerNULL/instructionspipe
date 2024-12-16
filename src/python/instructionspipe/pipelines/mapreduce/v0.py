@@ -14,13 +14,13 @@ from pydantic import BaseModel
 from openai import AsyncOpenAI, AsyncAzureOpenAI
 from openai import ChatCompletion
 
-from instructionspipe.utils import json2str_kv
-from instructionspipe.instructions import instructions_init_by_configs
-from instructionspipe.instructions import instructions_to_output
-from instructionspipe.instructions import instructions_to_md
-from instructionspipe.instructions import Instruction, Instructions
-from instructionspipe.instructions_runners import InstructionsRunnerBase
-from instructionspipe.llm_cli import LlmCli
+from ...utils import json2str_kv
+from ...instructions import instructions_init_by_configs
+from ...instructions import instructions_to_output
+from ...instructions import instructions_to_md
+from ...instructions import Instruction, Instructions
+from ...instructions_runners import InstructionsRunnerBase
+from ...llm_cli import LlmCli
 
 
 async def run_with_configs(
