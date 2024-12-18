@@ -71,16 +71,24 @@ class InstructionsRunnerBase:
         in_data: Dict[str, str], 
         instruction: Instruction
     ) -> List[Dict[str, str]]:
-        return [
+        out: List[Dict[str, str]] = [
             {
                 "role": "system",
                 "content": self.build_sys_msg(in_data, instruction)
             },
             {
-                "role": "system",
+                "role": "user",
                 "content": self.build_user_msg(in_data, instruction)
             }
         ]
+        if "mistral" in self.llm.model.lower():
+            out[0]["role"] = "user"
+            out = [
+                out[0],
+                {"role": "assistant", "content": "Ok."},
+                out[1]
+            ]
+        return out
 
     def init_instructions_chatml(
         self, 
