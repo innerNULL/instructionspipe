@@ -3,6 +3,7 @@
 # date: 2024-12-09
 
 
+import pdb
 from typing import Union, Optional, List, Dict, Coroutine, Callable, Any
 from openai import AsyncOpenAI, AsyncAzureOpenAI
 from openai import ChatCompletion
@@ -64,13 +65,23 @@ class LlmCli:
         json_schema: Optional[Dict]=None,
         temperature: Optional[float]=None, 
         max_tokens: int=4096
-    ):
+    ) -> Optional[ChatCompletion]:
         if isinstance(msg, str):
             msg = {"role": "user", "content": msg}
         if prefix is None:
             prefix = []
         if isinstance(prefix, dict):
             prefix = [prefix]
+        
+        # TODO: 
+        # TBH this logic is not very solid, is better to have a 
+        # independent function to judge if skip of not.
+        # Even skip can have 2 conditions: 
+        #   1. Return 'N/A'
+        #   2. Return row input based on some rules
+        if msg["content"] is None:
+            return None
+
         return await self.async_cli.chat.completions.create(
             model=self.model, 
             messages=prefix + [msg],
