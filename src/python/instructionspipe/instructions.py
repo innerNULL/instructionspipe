@@ -6,15 +6,7 @@
 from typing import Union, Optional, List, Dict, Coroutine, Callable, Any, Set
 from pydantic import BaseModel
 
-
-INVALID_VALS: Set[Optional[str]] = {
-    None, 
-    "", 
-    " ", 
-    "NA",
-    "N/A", 
-    "\n"
-}
+from .constants import INVALID_VALS
 
 
 class Instruction(BaseModel):

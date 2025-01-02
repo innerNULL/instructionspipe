@@ -12,20 +12,8 @@ from .instructions import instructions_to_output
 from .instructions import instruction_is_empty
 from .llm_cli import LlmCli
 from .instructions import Instructions, Instruction
-
-
-EMPTY_VAL: str = "N/A"
-
-
-INVALID_VALS: Set[Optional[str]] = {
-    EMPTY_VAL,
-    None,
-    "",
-    " ",
-    "NA",
-    "N/A",
-    "\n"
-}
+from .constants import EMPTY_VAL
+from .constants import INVALID_VALS
 
 
 class InstructionsRunnerBase:
