@@ -84,7 +84,7 @@ class InstructionsRunnerBase:
         self, 
         in_data: Dict[str, str], 
         instruction: Instruction
-    ) -> List[ Optional[Dict[str, str]] ]:
+    ) -> List[ Dict[str, Optional[str]] ]:
         out: List[Dict[str, str]] = [
             {"role": "system", "content": None}, 
             {"role": "system", "content": None}
@@ -131,7 +131,7 @@ class InstructionsRunnerBase:
         instructions = self.init_instructions_chatml(
             prev_instructions.result, instructions
         )
-        chatmls: List[ List[ Optional[Dict[str, str]] ] ] = [
+        chatmls: List[ List[ Dict[str, Optional[str]] ] ] = [
             x.msgs for x in instructions.instructions
         ]
         tasks: List[Coroutine] = [
