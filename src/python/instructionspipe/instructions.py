@@ -3,8 +3,10 @@
 # date: 2024-12-09
 
 
-from typing import Union, Optional, List, Dict, Coroutine, Callable, Any
+from typing import Union, Optional, List, Dict, Coroutine, Callable, Any, Set
 from pydantic import BaseModel
+
+from .constants import INVALID_VALS
 
 
 class Instruction(BaseModel):
@@ -68,4 +70,15 @@ def instructions_to_md(instructions: Instructions) -> str:
         result += "{}\n".format(final_resp)
         result += "\n"
     return result
-    
+  
+
+def instruction_is_empty(instruction: Instruction) -> bool:
+    if (
+        instruction.input_desc in INVALID_VALS 
+        and (
+            instruction.output_desc in INVALID_VALS 
+            and instruction.content in INVALID_VALS
+        )
+    ):
+        return True
+    return False
