@@ -1,0 +1,33 @@
+{
+  "in_data_path": "./_eval_cases.jsonl",
+  "out_data_path": "./_eval_results.jsonl",
+  "in_text_field": "in_text",
+  "out_text_field": "out_text",
+  "instruction_field": "instruction",
+  "gt_factuality_field": "gt_factuality",
+  "gt_eligibility_field": "gt_eligibility",
+  "llms": [
+    {
+      "api_type": "azure",
+      "api_url": "https://ai-multiagentcopilot952957483983.openai.azure.com/",
+      "api_key": "",
+      "api_version": "2024-02-15-preview",
+      "model": "gpt-4o-mini",
+      "sampling": true,
+      "temperature": 0.0,
+      "top_p": 0.0001,
+      "seed": 2
+    },
+    {
+      "api_type": "azure",
+      "api_url": "https://ai-multiagentcopilot952957483983.openai.azure.com/",
+      "api_key": "",
+      "api_version": "2024-02-15-preview",
+      "model": "gpt-4o",
+      "sampling": true,
+      "temperature": 0.0,
+      "top_p": 0.0001,
+      "seed": 2
+    }
+  ]
+}
