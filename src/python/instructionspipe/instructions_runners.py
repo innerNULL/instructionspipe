@@ -100,7 +100,10 @@ class InstructionsRunnerBase:
                     "content": self.build_user_msg(in_data, instruction)
                 }
             ]
-        if "mistral" in self.llm.model.lower():
+        if (
+            "mistral" in self.llm.model.lower()
+            or "gemma" in self.llm.model.lower()
+        ):
             out[0]["role"] = "user"
             out = [
                 out[0],
