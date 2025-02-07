@@ -1,9 +1,10 @@
 {
   "in_data_path": "./demo_data/ehr/faked_0.jsonl",
   "out_data_path": "./_text_mr.jsonl",
+  "chatml_path": "./_mr_pipeline_chatmls.jsonl",
   "llm": {
     "api_type": "openai",
-    "api_url": "http://0.0.0.0:8088/v1",
+    "api_url": "http://0.0.0.0:18088/v1",
     "api_key": "null",
     "api_version": "null",
     "model": "hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4",

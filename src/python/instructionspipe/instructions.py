@@ -82,3 +82,18 @@ def instruction_is_empty(instruction: Instruction) -> bool:
     ):
         return True
     return False
+
+
+def instructions_collect(instructions: Instructions) -> List[Dict]:
+    out: List[Dict] = []
+    for instruction in instructions.instructions:
+        out.append(instruction.dict())
+    return out
+
+
+def multi_instructions_collect(multi_instructions: List[Instructions]) -> List[Dict]:
+    out: List[Dict] = []
+    for instructions in multi_instructions:
+        out += instructions_collect(instructions)
+    return out
+
