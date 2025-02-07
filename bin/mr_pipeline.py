@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
-# file: self_verification_mr.py
+# file: mr_pipeline.py
 # date: 2024-11-09
+#
+# Run example:
+# python ./bin/mr_pipeline.py demo_configs/pipeline_mr/ehr.json
 
 
 import sys
@@ -20,6 +23,7 @@ from openai import AsyncOpenAI, AsyncAzureOpenAI
 from openai import ChatCompletion
 
 from instructionspipe.pipelines.mapreduce import run_with_configs
+from instructionspipe.utils import io_jsonl_write
 from instructionspipe.instructions import Instruction, Instructions
 from instructionspipe.instructions_runners import InstructionsRunnerBase
 from instructionspipe.llm_cli import LlmCli
@@ -30,6 +34,7 @@ async def main() -> None:
     print(configs)
     in_data_path: str = configs["in_data_path"]
     out_data_path: str = configs["out_data_path"]
+    chatml_path: str = configs["chatml_path"]
     map_conf: Dict = configs["pipe"][0]
     reduce_conf: Dict = configs["pipe"][1]
  
@@ -47,16 +52,13 @@ async def main() -> None:
         json.loads(x) for x in open(in_data_path, "r").read().split("\n")
         if x not in {""}
     ]
-    out_file = open(out_data_path, "w") 
     for in_sample in tqdm(in_samples):
         outputs: Dict = await run_with_configs(
             llm, in_sample, map_conf, reduce_conf 
         )
         in_sample["results"] = outputs
-        out_file.write(
-            json.dumps(in_sample, ensure_ascii=False) + "\n"
-        )
-    out_file.close()
+        io_jsonl_write(out_data_path, in_sample, "a")
+        io_jsonl_write(chatml_path, outputs["chatmls"], "a")
     return
 
 
