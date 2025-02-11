@@ -1,0 +1,10 @@
+{
+  "tokenizer": "google/gemma-2-9b-it",
+  "in_data_path": "./demo_data/cost_estimator/demo.jsonl",
+  "encoding_cols": ["context", "chatmls"],
+  "io_length_ratio": 0.7,
+  "max_sample_size": 500,
+  "inf_sample_size": 20000,
+  "encoding_price_per_1m": 0.15,
+  "decoding_price_per_1m": 0.60
+}
