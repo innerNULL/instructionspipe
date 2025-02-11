@@ -4,7 +4,7 @@
 #
 # Run example:
 # python ./bin/mr_pipeline.py demo_configs/pipeline_mr/ehr.json
-
+# python ./bin/mr_pipeline.py demo_configs/pipeline_mr/ehr_v1.json
 
 import sys
 import os
@@ -35,6 +35,8 @@ async def main() -> None:
     in_data_path: str = configs["in_data_path"]
     out_data_path: str = configs["out_data_path"]
     chatml_path: str = configs["chatml_path"]
+    if isinstance(configs["pipe"], str):
+        configs["pipe"] = json.loads(open(configs["pipe"], "r").read())
     map_conf: Dict = configs["pipe"][0]
     reduce_conf: Dict = configs["pipe"][1]
  
