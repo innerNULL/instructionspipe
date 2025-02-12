@@ -230,6 +230,8 @@ class Judgements(BaseModel):
 class MultiJudgements(BaseModel):
     factuality: Optional[float] = None
     eligibility: Optional[float] = None
+    factuality_rationales: Optional[List[str]] = None
+    eligibility_rationales: Optional[List[str]] = None
     details: Optional[List[Judgements]] = None
 
 
@@ -405,9 +407,11 @@ class FactsMetrics:
             raise e
         score: float = 0.0
         if result == "Minor Issue(s)":
-            score == 0.25
-        if result == "No Issues":
-            score == 1.0
+            score = 0.25
+        elif result == "No Issues":
+            score = 1.0
+        else:
+            print("Unrecognized eligibility judge result: %s" % result)
         out: Judgement = Judgement()
         out.name = "eligibility"
         out.result = result
@@ -436,8 +440,14 @@ class FactsMetrics:
         for judgements in multi_judgements:
             if judgements.name == "factuality":
                 out.factuality = judgements.score
+                out.factuality_rationales = [
+                    x.rationale for x in judgements.outputs
+                ]
             if judgements.name == "eligibility":
                 out.eligibility = judgements.score
+                out.eligibility_rationales = [
+                    x.rationale for x in judgements.outputs
+                ]
         out.details = multi_judgements
         return out
 
@@ -500,6 +510,11 @@ def data_load(
         instruction: str = data.get(instruction_col, None)
         gt_factuality: Optional[float] = data.get(gt_factuality_col, None)
         gt_eligibility: Optional[float] = data.get(gt_eligibility_col, None)
+        
+        if src_text is None:
+            src_text = ""
+        if out_text is None:
+            out_text = ""
         facts_input: FactsInput = FactsInput(
             src_text=src_text,
             gen_text=out_text,
@@ -528,12 +543,14 @@ async def main() -> None:
         configs["instruction_field"],
         configs["gt_factuality_field"],
         configs["gt_eligibility_field"]
-    )
+    )[:configs["max_sample_size"]]
     inf_results: List[Dict] = []
     for sample in tqdm(samples):
         multi_judgements: MultiJudgements = await facts_metrics.run(sample)
         factuality: float = multi_judgements.factuality
         eligibility: float = multi_judgements.eligibility
+        factuality_rationales: List[str] = multi_judgements.factuality_rationales
+        eligibility_rationales: List[str] = multi_judgements.eligibility_rationales
         gt_factuality: Optional[float] = sample.gt_factuality
         gt_eligibility: Optional[float] = sample.gt_eligibility
         if gt_factuality is not None or gt_eligibility is not None:
@@ -549,7 +566,9 @@ async def main() -> None:
             "gt_eligibility": gt_eligibility,
             "src_text": sample.src_text, 
             "gen_text": sample.gen_text,
-            "instruction": sample.instruction
+            "instruction": sample.instruction,
+            "factuality_rationales": factuality_rationales, 
+            "eligibility_rationales": eligibility_rationales
         }
         inf_results.append(out)
     out_file = open(configs["out_data_path"], "w")
