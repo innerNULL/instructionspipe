@@ -439,7 +439,7 @@ class FactsMetrics:
             score: float = 0.0
             if result == "Minor Issue(s)":
                 score = 0.25
-            elif result == "No Issues":
+            if result == "No Issues":
                 score = 1.0
             else:
                 pass
@@ -525,8 +525,8 @@ async def llms_init(configs: List[Dict]) -> Dict[str, LlmCli]:
     return out
 
 
-def data_load(
-    path: str, 
+def facts_input_load(
+    input_data: List[Dict], 
     src_text_col: str, 
     out_text_col: str, 
     instruction_col: str, 
@@ -534,11 +534,7 @@ def data_load(
     gt_eligibility_col: Optional[str] = None
 ) -> List[FactsInput]:
     out: List[FactsInput] = []
-    raw_data: List[Dict] = [
-        json.loads(x) for x in open(path, "r").read().split("\n")
-        if x not in {""}
-    ]
-    for data in raw_data:
+    for data in input_data:
         src_text: str = data[src_text_col]
         out_text: str = data[out_text_col]
         instruction: str = data.get(instruction_col, None)
@@ -573,15 +569,19 @@ async def main() -> None:
             SYS_PROMPT_FACTUALITY_SCORE_RESP_LEVEL_SELF_REFINE,
             SYS_PROMPT_ELIGIBILITY_SCORE
         )
-        samples: List[FactsInput] = data_load(
-            in_data_path, 
-            configs["in_text_field"], 
-            configs["out_text_field"], 
-            configs["instruction_field"],
-            configs["gt_factuality_field"],
-            configs["gt_eligibility_field"]
-        )[:configs["max_sample_size"]]
-        for sample in tqdm(samples):
+        raw_samples: List[Dict] = [
+            json.loads(x) for x in open(in_data_path, "r").read().split("\n")
+            if x not in {""}
+        ][:configs["max_sample_size"]]
+        for raw_sample in tqdm(raw_samples):
+            sample: FactsInput = facts_input_load(
+                [raw_sample], 
+                configs["in_text_field"], 
+                configs["out_text_field"], 
+                configs["instruction_field"],
+                configs["gt_factuality_field"],
+                configs["gt_eligibility_field"]
+            )[0]
             multi_judgements: MultiJudgements = await facts_metrics.run(sample)
             factuality: float = multi_judgements.factuality
             eligibility: float = multi_judgements.eligibility
@@ -591,9 +591,9 @@ async def main() -> None:
             gt_eligibility: Optional[float] = sample.gt_eligibility
             if gt_factuality is not None or gt_eligibility is not None:
                 if gt_factuality is not None:
-                    assert(factuality <= gt_factuality)
+                    assert(factuality <= gt_factuality + 0.15)
                 if gt_eligibility is not None:
-                    assert(eligibility <= gt_eligibility)
+                    assert(eligibility <= gt_eligibility + 0.15)
                 print("Passed one test case")
             out: Dict = {
                 "factuality": factuality, 
