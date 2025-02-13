@@ -169,17 +169,17 @@ INPUT_4: str = \
 
 
 CASES: List[Dict] = [
-    {"in_text": INPUT_1, "out_text": NEG_1, "instruction": INSTRUCTION_1, "gt_factuality": 1.0, "gt_eligibility": 1.0},
-    {"in_text": INPUT_1, "out_text": POS_1_1, "instruction": INSTRUCTION_1, "gt_factuality": 0.0, "gt_eligibility": None},
-    {"in_text": INPUT_1, "out_text": POS_1_2, "instruction": INSTRUCTION_1, "gt_factuality": None, "gt_eligibility": 0.0},
-    {"in_text": INPUT_2, "out_text": NEG_2, "instruction": INSTRUCTION_2, "gt_factuality": 1.0, "gt_eligibility": 1.0},
-    {"in_text": INPUT_2, "out_text": POS_2_1, "instruction": INSTRUCTION_2, "gt_factuality": 0.0, "gt_eligibility": None},
-    {"in_text": INPUT_2, "out_text": POS_2_2, "instruction": INSTRUCTION_2, "gt_factuality": 1.0, "gt_eligibility": 0.0},
-    {"in_text": INPUT_3, "out_text": NEG_3, "instruction": INSTRUCTION_3, "gt_factuality": 1.0, "gt_eligibility": 1.0},
-    {"in_text": INPUT_3, "out_text": POS_3_1, "instruction": INSTRUCTION_3, "gt_factuality": 0.0, "gt_eligibility": 0.0},
-    {"in_text": INPUT_3, "out_text": POS_3_2, "instruction": INSTRUCTION_3, "gt_factuality": 0.0, "gt_eligibility": 0.0},
-    {"in_text": INPUT_3, "out_text": POS_3_3, "instruction": INSTRUCTION_3, "gt_factuality": None, "gt_eligibility": 0.0},
-    {"in_text": INPUT_3, "out_text": POS_3_4, "instruction": INSTRUCTION_3, "gt_factuality": None, "gt_eligibility": 0.0},
+    {"id": 0, "in_text": INPUT_1, "out_text": NEG_1, "instruction": INSTRUCTION_1, "gt_factuality": 1.0, "gt_eligibility": 1.0},
+    {"id": 1, "in_text": INPUT_1, "out_text": POS_1_1, "instruction": INSTRUCTION_1, "gt_factuality": 0.0, "gt_eligibility": None},
+    {"id": 2, "in_text": INPUT_1, "out_text": POS_1_2, "instruction": INSTRUCTION_1, "gt_factuality": None, "gt_eligibility": 0.0},
+    {"id": 3, "in_text": INPUT_2, "out_text": NEG_2, "instruction": INSTRUCTION_2, "gt_factuality": 1.0, "gt_eligibility": 1.0},
+    {"id": 4, "in_text": INPUT_2, "out_text": POS_2_1, "instruction": INSTRUCTION_2, "gt_factuality": 0.0, "gt_eligibility": None},
+    {"id": 5, "in_text": INPUT_2, "out_text": POS_2_2, "instruction": INSTRUCTION_2, "gt_factuality": 1.0, "gt_eligibility": 0.0},
+    {"id": 6, "in_text": INPUT_3, "out_text": NEG_3, "instruction": INSTRUCTION_3, "gt_factuality": 1.0, "gt_eligibility": 1.0},
+    {"id": 7, "in_text": INPUT_3, "out_text": POS_3_1, "instruction": INSTRUCTION_3, "gt_factuality": 0.0, "gt_eligibility": 0.0},
+    {"id": 8, "in_text": INPUT_3, "out_text": POS_3_2, "instruction": INSTRUCTION_3, "gt_factuality": 0.0, "gt_eligibility": 0.0},
+    {"id": 9, "in_text": INPUT_3, "out_text": POS_3_3, "instruction": INSTRUCTION_3, "gt_factuality": None, "gt_eligibility": 0.0},
+    {"id": 10, "in_text": INPUT_3, "out_text": POS_3_4, "instruction": INSTRUCTION_3, "gt_factuality": None, "gt_eligibility": 0.0},
 ]
 
 
