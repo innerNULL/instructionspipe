@@ -442,7 +442,7 @@ class FactsMetrics:
             elif result == "No Issues":
                 score = 1.0
             else:
-                print("Unrecognized eligibility judge result: %s" % result)
+                pass
             out.result = result
             out.score = score
             out.rationale = rationale
