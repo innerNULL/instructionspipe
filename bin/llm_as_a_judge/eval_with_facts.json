@@ -6,6 +6,8 @@
   "instruction_field": "instruction",
   "gt_factuality_field": "gt_factuality",
   "gt_eligibility_field": "gt_eligibility",
+  "max_sample_size": 10,
+  "extra_cols": ["id"],
   "llms": [
     {
       "api_type": "azure",
