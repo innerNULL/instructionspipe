@@ -30,6 +30,7 @@ eval_results as (
 ),
 cleaned_eval_results as (
   select
+  name,
   factuality, 
   eligibility
   from 
@@ -37,12 +38,29 @@ cleaned_eval_results as (
 ),
 eval_avg_metrics as (
   select 
-  sum(factuality) / count(1) as avg_factuality,
-  sum(eligibility) / count(1) as avg_eligibility
+  round(sum(factuality) / count(1), 2) as avg_factuality,
+  round(sum(eligibility) / count(1), 2) as avg_eligibility,
+  min(factuality) as min_factuality,
+  max(factuality) as max_factuality,
+  min(eligibility) as min_eligibility,
+  max(eligibility) as max_eligibility
   from 
   cleaned_eval_results
+),
+eval_avg_metrics_by_inst as (
+  select 
+  name,
+  round(sum(factuality) / count(1), 2) as avg_factuality,
+  round(sum(eligibility) / count(1), 2) as avg_eligibility,
+  min(factuality) as min_factuality,
+  max(factuality) as max_factuality,
+  min(eligibility) as min_eligibility,
+  max(eligibility) as max_eligibility
+  from
+  cleaned_eval_results
+  group by name
 )
-select * from eval_avg_metrics;
+select * from eval_avg_metrics_by_inst;
 """.strip("\n")
 
 
