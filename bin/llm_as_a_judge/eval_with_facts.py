@@ -3,7 +3,9 @@
 # date: 2025-01-21
 
 
+import os
 import pdb
+import traceback
 import sys
 import json
 import asyncio
@@ -13,6 +15,35 @@ from typing import Union, Optional, List, Dict, Coroutine, Callable, Any
 from openai import AsyncOpenAI, AsyncAzureOpenAI
 from openai import ChatCompletion
 from pydantic import BaseModel
+
+
+SQL: str = \
+"""
+with
+eval_results as (
+  select *
+  from 
+  read_json(
+    '__INF_RESULTS_PATH__', 
+    auto_detect=true, format='newline_delimited'
+  )
+),
+cleaned_eval_results as (
+  select
+  factuality, 
+  eligibility
+  from 
+  eval_results
+),
+eval_avg_metrics as (
+  select 
+  sum(factuality) / count(1) as avg_factuality,
+  sum(eligibility) / count(1) as avg_eligibility
+  from 
+  cleaned_eval_results
+)
+select * from eval_avg_metrics;
+""".strip("\n")
 
 
 SYS_PROMPT_FACTUALITY_SCORE_RESP_LEVEL: str = \
@@ -365,6 +396,7 @@ class FactsMetrics:
 
         out: Judgement = Judgement()
         out.msgs = json.dumps(msgs)
+        out.name = "factuality"
         try: 
             score_1: float = (
                 1.0 if json.loads(result_1)["label"] == "supported" 
@@ -378,10 +410,10 @@ class FactsMetrics:
             out.score = score
             out.result = json.loads(result_1)["label"]
             out.rationale = result_1
-            out.name = "factuality"
         except Exception as e:
-            print(e)
-            pass
+            print("Sth wrong")
+            print(traceback.format_exc())
+            out.score = 0.5
         return out
 
     async def run_eligibility_score(
@@ -398,26 +430,28 @@ class FactsMetrics:
         msgs.append({"role": "assistant", "content": resp})
         print("Run eligibility eval")
         rationale: str = resp
+        out: Judgement = Judgement()
+        out.name = "eligibility"
         try:
             result: str = json.loads(
                 resp.split("```json")[-1].replace("```", "")
             )["Instruction Following"]
+            score: float = 0.0
+            if result == "Minor Issue(s)":
+                score = 0.25
+            elif result == "No Issues":
+                score = 1.0
+            else:
+                print("Unrecognized eligibility judge result: %s" % result)
+            out.result = result
+            out.score = score
+            out.rationale = rationale
+            out.msgs = json.dumps(msgs)
         except Exception as e:
+            print("Sth wrong")
             print(resp)
-            raise e
-        score: float = 0.0
-        if result == "Minor Issue(s)":
-            score = 0.25
-        elif result == "No Issues":
-            score = 1.0
-        else:
-            print("Unrecognized eligibility judge result: %s" % result)
-        out: Judgement = Judgement()
-        out.name = "eligibility"
-        out.result = result
-        out.score = score
-        out.rationale = rationale
-        out.msgs = json.dumps(msgs)
+            print(traceback.format_exc())
+            out.score = 0.5
         return out
 
     async def run_multi_judgements(
@@ -529,55 +563,65 @@ def data_load(
 async def main() -> None:
     configs: Dict = json.loads(open(sys.argv[1], "r").read())
     in_data_path: str = configs["in_data_path"]
-    llms: Dict[str] = await llms_init(configs["llms"])
-    facts_metrics: FactsMetrics = FactsMetrics.new_with_llms(
-        llms, 
-        SYS_PROMPT_FACTUALITY_SCORE_RESP_LEVEL,
-        SYS_PROMPT_FACTUALITY_SCORE_RESP_LEVEL_SELF_REFINE,
-        SYS_PROMPT_ELIGIBILITY_SCORE
-    )
-    samples: List[FactsInput] = data_load(
-        in_data_path, 
-        configs["in_text_field"], 
-        configs["out_text_field"], 
-        configs["instruction_field"],
-        configs["gt_factuality_field"],
-        configs["gt_eligibility_field"]
-    )[:configs["max_sample_size"]]
+    out_data_path: str = configs["out_data_path"]
     inf_results: List[Dict] = []
-    for sample in tqdm(samples):
-        multi_judgements: MultiJudgements = await facts_metrics.run(sample)
-        factuality: float = multi_judgements.factuality
-        eligibility: float = multi_judgements.eligibility
-        factuality_rationales: List[str] = multi_judgements.factuality_rationales
-        eligibility_rationales: List[str] = multi_judgements.eligibility_rationales
-        gt_factuality: Optional[float] = sample.gt_factuality
-        gt_eligibility: Optional[float] = sample.gt_eligibility
-        if gt_factuality is not None or gt_eligibility is not None:
-            if gt_factuality is not None:
-                assert(factuality <= gt_factuality)
-            if gt_eligibility is not None:
-                assert(eligibility <= gt_eligibility)
-            print("Passed one test case")
-        out: Dict = {
-            "factuality": factuality, 
-            "eligibility": eligibility,
-            "gt_factuality": gt_factuality, 
-            "gt_eligibility": gt_eligibility,
-            "src_text": sample.src_text, 
-            "gen_text": sample.gen_text,
-            "instruction": sample.instruction,
-            "factuality_rationales": factuality_rationales, 
-            "eligibility_rationales": eligibility_rationales
-        }
-        inf_results.append(out)
-    out_file = open(configs["out_data_path"], "w")
-    for result in inf_results:
-        out_file.write(
-            json.dumps(result, ensure_ascii=False) + "\n"
+    if not os.path.exists(out_data_path):
+        llms: Dict[str] = await llms_init(configs["llms"])
+        facts_metrics: FactsMetrics = FactsMetrics.new_with_llms(
+            llms, 
+            SYS_PROMPT_FACTUALITY_SCORE_RESP_LEVEL,
+            SYS_PROMPT_FACTUALITY_SCORE_RESP_LEVEL_SELF_REFINE,
+            SYS_PROMPT_ELIGIBILITY_SCORE
         )
-    out_file.close()
-    print("Dumped the evaluation results to %s" % configs["out_data_path"])
+        samples: List[FactsInput] = data_load(
+            in_data_path, 
+            configs["in_text_field"], 
+            configs["out_text_field"], 
+            configs["instruction_field"],
+            configs["gt_factuality_field"],
+            configs["gt_eligibility_field"]
+        )[:configs["max_sample_size"]]
+        for sample in tqdm(samples):
+            multi_judgements: MultiJudgements = await facts_metrics.run(sample)
+            factuality: float = multi_judgements.factuality
+            eligibility: float = multi_judgements.eligibility
+            factuality_rationales: List[str] = multi_judgements.factuality_rationales
+            eligibility_rationales: List[str] = multi_judgements.eligibility_rationales
+            gt_factuality: Optional[float] = sample.gt_factuality
+            gt_eligibility: Optional[float] = sample.gt_eligibility
+            if gt_factuality is not None or gt_eligibility is not None:
+                if gt_factuality is not None:
+                    assert(factuality <= gt_factuality)
+                if gt_eligibility is not None:
+                    assert(eligibility <= gt_eligibility)
+                print("Passed one test case")
+            out: Dict = {
+                "factuality": factuality, 
+                "eligibility": eligibility,
+                "gt_factuality": gt_factuality, 
+                "gt_eligibility": gt_eligibility,
+                "src_text": sample.src_text, 
+                "gen_text": sample.gen_text,
+                "instruction": sample.instruction,
+                "factuality_rationales": factuality_rationales, 
+                "eligibility_rationales": eligibility_rationales
+            }
+            inf_results.append(out)
+        out_file = open(out_data_path, "w")
+        for result in inf_results:
+            out_file.write(
+                json.dumps(result, ensure_ascii=False) + "\n"
+            )
+        out_file.close()
+        print("Dumped the evaluation results to %s" % configs["out_data_path"])
+    else:
+        print("Inference result '%s' exists" % out_data_path)
+        inf_results = [
+            json.loads(x) for x in open(out_data_path, "r").read().split("\n")
+            if x not in {""}
+        ]
+    sql: str = SQL.replace("__INF_RESULTS_PATH__", out_data_path)
+    print(duckdb.query(sql))
     return
 
 
