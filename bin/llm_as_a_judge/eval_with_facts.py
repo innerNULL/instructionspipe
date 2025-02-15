@@ -34,13 +34,18 @@ eval_results as (
 cleaned_eval_results as (
   select
   name,
-  factuality, 
-  eligibility,
+  case
+    when gen_text <> 'N/A' and src_text <> '' then factuality
+    else 1.0
+  end as factuality,
+  case
+    when gen_text <> 'N/A' and src_text <> '' then eligibility
+    else 1.0
+  end as eligibility,
   cast(factuality >= 0.5 as float) as high_factuality,
   cast(eligibility >= 0.5 as float) as high_eligibility
   from 
   eval_results
-  where gen_text <> 'N/A' and src_text <> ''
 ),
 eval_avg_metrics as (
   select 
