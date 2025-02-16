@@ -10,10 +10,12 @@ import sys
 import json
 import asyncio
 import duckdb
+import pandas
 from tqdm import tqdm
 from typing import Union, Optional, List, Dict, Coroutine, Callable, Any
 from openai import AsyncOpenAI, AsyncAzureOpenAI
 from openai import ChatCompletion
+from pandas import DataFrame
 from pydantic import BaseModel
 
 
@@ -21,7 +23,8 @@ SQL: str = \
 """
 with
 eval_results as (
-  select *
+  select 
+  *
   from 
   read_json(
     '__INF_RESULTS_PATH__', 
@@ -30,19 +33,68 @@ eval_results as (
 ),
 cleaned_eval_results as (
   select
-  factuality, 
-  eligibility
+  name,
+  case
+    when gen_text <> 'N/A' and src_text <> '' then factuality
+    else 1.0
+  end as factuality,
+  case
+    when gen_text <> 'N/A' and src_text <> '' then eligibility
+    else 1.0
+  end as eligibility,
+  cast(factuality >= 0.5 as float) as high_factuality,
+  cast(eligibility >= 0.5 as float) as high_eligibility
   from 
   eval_results
 ),
 eval_avg_metrics as (
   select 
-  sum(factuality) / count(1) as avg_factuality,
-  sum(eligibility) / count(1) as avg_eligibility
+  round(sum(factuality) / count(1), 2) as avg_factuality,
+  round(sum(eligibility) / count(1), 2) as avg_eligibility,
+  min(factuality) as min_factuality,
+  max(factuality) as max_factuality,
+  min(eligibility) as min_eligibility,
+  max(eligibility) as max_eligibility, 
+  round(sum(high_factuality) / count(1), 2) as high_factuality_rate, 
+  round(sum(high_eligibility) / count(1), 2) as high_eligibility_rate
   from 
   cleaned_eval_results
+),
+eval_avg_metrics_by_inst as (
+  select 
+  name,
+  round(sum(factuality) / count(1), 2) as avg_factuality,
+  round(sum(eligibility) / count(1), 2) as avg_eligibility,
+  min(factuality) as min_factuality,
+  max(factuality) as max_factuality,
+  min(eligibility) as min_eligibility,
+  max(eligibility) as max_eligibility,
+  round(sum(high_factuality) / count(1), 2) as high_factuality_rate,
+  round(sum(high_eligibility) / count(1), 2) as high_eligibility_rate
+  from
+  cleaned_eval_results
+  group by name
+),
+eval_avg_metrics_sub as (
+  select
+  avg_factuality, 
+  avg_eligibility, 
+  high_factuality_rate, 
+  high_eligibility_rate
+  from 
+  eval_avg_metrics
+),
+eval_avg_metrics_by_inst_sub as (
+  select
+  name, 
+  avg_factuality,
+  avg_eligibility,
+  high_factuality_rate,
+  high_eligibility_rate
+  from 
+  eval_avg_metrics_by_inst
 )
-select * from eval_avg_metrics;
+select * from eval_avg_metrics_sub;
 """.strip("\n")
 
 
@@ -623,7 +675,8 @@ async def main() -> None:
             if x not in {""}
         ]
     sql: str = SQL.replace("__INF_RESULTS_PATH__", out_data_path)
-    print(duckdb.query(sql))
+    result: DataFrame = duckdb.query(sql).df()
+    print(result.to_markdown(index=False))
     return
 
 
