@@ -1,0 +1,14 @@
+{
+  "workspace": "./_text_corpus_slimpajama_dc_processor",
+  "data_path_or_name": "./demo_data/etl/dataset/text_corpus/text_corpus_slimpajama_dc_processor.jsonl",
+  "target_text_cols": ["findings"],
+  "n_gram": 7,
+  "minhash_permutation_num": 128,
+  "lsh_threshold": 0.6, 
+  "most_dup": 0, 
+  "low_length_filter": {
+    "findings": 2
+  },
+  "output_path": "./_text_corpus_slimpajama_dc_processor.jsonl",
+  "debug": true
+}
