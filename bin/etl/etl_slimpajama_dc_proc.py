@@ -145,7 +145,6 @@ def main() -> None:
                         dbg_corpus[text_id] = text
                 else:
                     print("Corpus {} is a duplication of: {}".format(text_id, ", ".join(duplications)))
-                    pdb.set_trace()
                     remove = True
 
         record = data_file.readline()
