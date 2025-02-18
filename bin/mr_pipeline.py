@@ -22,7 +22,7 @@ from pydantic import BaseModel
 from openai import AsyncOpenAI, AsyncAzureOpenAI
 from openai import ChatCompletion
 
-from instructionspipe.pipelines.mapreduce import run_with_configs
+from instructionspipe.impl.mapreduce import run_with_configs
 from instructionspipe.utils import io_jsonl_write
 from instructionspipe.instructions import Instruction, Instructions
 from instructionspipe.instructions_runners import InstructionsRunnerBase

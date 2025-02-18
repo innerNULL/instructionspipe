@@ -4,14 +4,14 @@
   "chatml_path": "./_mr_pipeline_chatmls.jsonl",
   "llm": {
     "api_type": "openai",
-    "api_url": "http://0.0.0.0:18088/v1",
+    "api_url": "http://0.0.0.0:6789/v1",
     "api_key": "null",
     "api_version": "null",
-    "model": "hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4",
+    "model": "google/gemma-2-2b-it",
     "sampling": true, 
     "temperature": 0.0,
     "top_p": 0.0001,
     "seed": 2
   },
-  "pipe": "./demo_configs/pipeline_mr/ehr_instructions.json"
+  "pipe": "./demo_configs/impl/pipeline_mr/ehr_instructions.json"
 }
