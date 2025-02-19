@@ -29,4 +29,25 @@ def io_jsonl_write(
         )
     file.close()
     return
-    
+   
+
+def json_is_str_kv(data: Dict) -> bool:
+    for k, v in data.items():
+        if not isinstance(v, str):
+            return False
+    return True
+
+
+def json_str_kv_to_md(data: Dict, header_level: int=1) -> str:
+    header_prefix: str = "#" * header_level
+    out: str = ""
+    for k, v in data.items():
+        out += "%s %s" % (header_prefix, k)
+        out += "\n"
+        if isinstance(v, dict) or isinstance(v, list):
+            out += json.dumps(v, indent=2)
+        else:
+            out += str(v)
+        out += "\n"
+        out += "\n"
+    return out
