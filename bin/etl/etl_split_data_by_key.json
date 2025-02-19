@@ -1,0 +1,7 @@
+{
+  "in_data_path": "./demo_data/etl/etl_split_data_by_key/test.jsonl",
+  "out_data_dir": "./_train_val_test",
+  "seed": 2,
+  "instruction_name_col": "name",
+  "train_val_test_ratio": [0.8, 0.1, 0.1]
+}
