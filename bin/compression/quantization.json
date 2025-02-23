@@ -1,0 +1,10 @@
+{
+  "model_name_or_path": "unsloth/Meta-Llama-3.1-8B-Instruct",
+  "out_dir": "./_compressed_llm",
+  "data_name_or_path": "HuggingFaceH4/ultrachat_200k",
+  "data_split": "train_sft",
+  "target_cols": ["messages"],
+  "delimiter": "\n\n",
+  "calibration_sample_size": 512,
+  "max_sequence_len": 5000
+}
