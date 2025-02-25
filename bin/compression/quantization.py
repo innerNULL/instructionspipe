@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # file: quantization.py
 # date: 2025-02-23
-
+#
+# Usage:
+# CUDA_VISIBLE_DEVICES=1,2,3,4 python ./bin/compression/quantization.py ./bin/compression/quantization.json 
 
 import os
 import sys

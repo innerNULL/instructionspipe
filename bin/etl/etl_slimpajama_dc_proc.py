@@ -32,7 +32,7 @@ import os
 import string
 import json
 from functools import partial
-from typing import List, Dict, Callable, Optional
+from typing import List, Dict, Callable, Optional, Set
 from sklearn.feature_extraction.text import CountVectorizer 
 from datasketch import MinHash
 from datasketch import MinHashLSH
@@ -113,6 +113,9 @@ def main() -> None:
     )
     
     dbg_corpus: Dict[str, str] = {}
+    hard_dup_recorder: Dict[str, Set[str]] = {
+        k: set() for k in configs["target_text_cols"]
+    }
     data_file = open(configs["data_path_or_name"], "r")
     output_file = open(configs["output_path"], "w")
     record: str = data_file.readline()
@@ -125,8 +128,15 @@ def main() -> None:
         for text_col in configs["target_text_cols"]:
             text: str = sample[text_col]
             text_id: str = "{}-{}".format(sample_id, text_col)
-            
             print("Checking corpus {}".format(text_id))
+            
+            # Hard deduplication
+            if not remove:
+                if text in hard_dup_recorder[text_col]:
+                    print("Hard deduplication triggered for {}".format(text_id))
+                    remove = True
+                hard_dup_recorder[text_col].add(text)
+            
             # Low length filter
             if not remove:
                 word_cnt: int = len(text.replace("\n", " ").split(" "))
@@ -134,7 +144,7 @@ def main() -> None:
                     print("Low length filter triggered for {}".format(text_id))
                     remove = True
             
-            # Deduplication
+            # Semantic deduplication
             if not remove:
                 n_grams: List[str] = n_gram_runner.run(text)
                 duplications: List[str] = lshs.query_with_n_grams(text_col, n_grams)
