@@ -7,7 +7,7 @@
     "api_url": "http://0.0.0.0:6789/v1",
     "api_key": "null",
     "api_version": "null",
-    "model": "google/gemma-2-2b-it",
+    "model": "mistralai/Mistral-7B-Instruct-v0.3",
     "sampling": true, 
     "temperature": 0.0,
     "top_p": 0.0001,

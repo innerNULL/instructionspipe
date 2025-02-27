@@ -4,9 +4,14 @@
 
 
 import pdb
+import hashlib
+import json
 from typing import Union, Optional, List, Dict, Coroutine, Callable, Any
 from openai import AsyncOpenAI, AsyncAzureOpenAI
-from openai import ChatCompletion
+from openai.types.chat.chat_completion import ChatCompletion
+
+from .cache import CacheBase
+from .cache import InMemCache
 
 
 class LlmCli:
@@ -17,6 +22,7 @@ class LlmCli:
         self.seed: Optional[int] = None
         self.temperature: Optional[float] = None
         self.top_p: Optional[float] = None
+        self.cache: Optional[CacheBase] = None
 
     @classmethod
     def new(
@@ -28,7 +34,8 @@ class LlmCli:
         api_type: str="openai",
         api_version: str="",
         temperature: float=0.0, 
-        top_p: float=0.01
+        top_p: float=0.01,
+        cache: Optional[CacheBase]=None
     ):
         out = cls()
         if api_type == "openai":
@@ -44,6 +51,10 @@ class LlmCli:
         out.seed = seed
         out.temperature = temperature
         out.top_p = top_p
+        if cache is None:
+            out.cache = InMemCache.new_with_configs({"size": 10000})
+        else:
+            out.cache = cache
         return out
 
     @classmethod
@@ -81,13 +92,25 @@ class LlmCli:
         #   2. Return row input based on some rules
         if msg["content"] is None:
             return None
-
-        return await self.async_cli.chat.completions.create(
-            model=self.model, 
-            messages=prefix + [msg],
-            seed=self.seed,
-            temperature=self.temperature if temperature is None else temperature,
-            max_tokens=max_tokens,
-            top_p=self.top_p,
-            response_format=json_schema
+        
+        chaml: List[Dict] = prefix + [msg]
+        cache_key: str = (
+            hashlib.sha256(json.dumps(chaml).encode('utf-8')).hexdigest()
         )
+        cache_val: Optional[str] = self.cache.read(cache_key)
+        out: Optional[ChatCompletion] = None
+
+        if cache_val is not None:
+            out = ChatCompletion.parse_raw(cache_val)
+        else:
+            out = await self.async_cli.chat.completions.create(
+                model=self.model, 
+                messages=prefix + [msg],
+                seed=self.seed,
+                temperature=self.temperature if temperature is None else temperature,
+                max_tokens=max_tokens,
+                top_p=self.top_p,
+                response_format=json_schema
+            )
+            self.cache.write(cache_key, out.to_json())
+        return out
