@@ -18,6 +18,8 @@ class Instruction(BaseModel):
     scope: Optional[List[str]] = None
     msgs: Optional[List[Dict[str, str]]] = None
     finished: bool = False
+    stage: Optional[int] = None
+    session_id: Optional[str] = None
 
 
 class Instructions(BaseModel):

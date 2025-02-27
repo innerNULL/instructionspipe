@@ -6,6 +6,7 @@
 # python ./bin/mr_pipeline.py demo_configs/pipeline_mr/ehr.json
 # python ./bin/mr_pipeline.py demo_configs/pipeline_mr/ehr_v1.json
 
+
 import sys
 import os
 sys.path.append(

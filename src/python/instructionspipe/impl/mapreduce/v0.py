@@ -8,6 +8,7 @@ import asyncio
 import traceback
 import copy
 import json
+import uuid
 from tqdm import tqdm
 from typing import Union, Optional, List, Dict, Coroutine, Callable, Any
 from pydantic import BaseModel
@@ -49,6 +50,15 @@ async def run_with_configs(
     reduce_instructions: Instructions = (
         await reducer.async_run(map_instructions)
     )
+    
+    session_id: str = str(uuid.uuid4())
+    for map_instruction in map_instructions.instructions:
+        map_instruction.session_id = session_id
+        map_instruction.stage = 1
+    for reduce_instruction in reduce_instructions.instructions:
+        reduce_instruction.session_id = session_id
+        reduce_instruction.stage = 2
+
     outputs: Dict = {
         "map_results": map_instructions.result, 
         "reduce_results": reduce_instructions.result,
