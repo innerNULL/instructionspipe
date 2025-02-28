@@ -79,6 +79,17 @@ def multi_sampling(
         data = sampling(data, key, max_group_size, seed)
     return data
 
+
+def distribution_check(data: List[Dict], key: str) -> None:
+    grouped_data: Dict[str, List[Dict]] = grouping(data, key)
+    for k, v in sorted(
+        [(k, len(v)) for k, v in grouped_data.items()], 
+        key=lambda x: x[1],
+        reverse=True
+    ):
+        print("%s: %i" % (k, v))
+
+
 def main() -> None:
     configs: Dict = json.loads(open(sys.argv[1], "r").read())
     print(configs)
@@ -99,6 +110,10 @@ def main() -> None:
         2
     )
     print("Data size after sampling: %i" % len(data))
+    
+    for k in configs["sampling_keys"]:
+        print("------ Distribution along '%s' ------" % k)
+        distribution_check(data, k)
     return
 
 
