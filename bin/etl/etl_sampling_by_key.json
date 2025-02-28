@@ -1,0 +1,7 @@
+{
+  "in_data_path": "./demo_data/etl/etl_sampling_by_key/dev.jsonl",
+  "out_data_path": "./_etl_sampling_by_key.jsonl",
+  "sampling_keys": ["col1"],
+  "deduplication_keys": ["col2"],
+  "max_group_size": 3
+}
