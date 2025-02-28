@@ -90,6 +90,14 @@ def distribution_check(data: List[Dict], key: str) -> None:
         print("%s: %i" % (k, v))
 
 
+def jsonl_dump(data: List[Dict], path: str) -> None:
+    file = open(path, "w")
+    for row in data:
+        file.write(json.dumps(row, ensure_ascii=False) + "\n")
+    file.close()
+    print("Successed dumped data to %s" % path)
+
+
 def main() -> None:
     configs: Dict = json.loads(open(sys.argv[1], "r").read())
     print(configs)
@@ -114,6 +122,8 @@ def main() -> None:
     for k in configs["sampling_keys"]:
         print("------ Distribution along '%s' ------" % k)
         distribution_check(data, k)
+
+    jsonl_dump(data, configs["out_data_path"])
     return
 
 
