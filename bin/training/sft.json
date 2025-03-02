@@ -1,12 +1,18 @@
 {
   "wandb": {
     "project": "work-asus-llm_text_summ",
-    "key": "7ee24ec02c0fe15bbb344b19233c7c619d03ef8d"
+    "key": ""
   },
   "model": {
     "model_name_or_path": "google/gemma-2-2b-it",
     "tokenizer_name_or_path": "google/gemma-2-2b-it",
     "quantization": true
+  },
+  "peft": {
+    "type": "lora",
+    "lora_rank": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.1
   },
   "data": {
     "train_data_path": "./demo_data/training/train_chatml.jsonl",
@@ -17,7 +23,7 @@
   },
   "train": {
     "out_dir": "./_sft_dev",
-    "learning_rate": 0.00001,
+    "learning_rate": 0.001,
     "num_epochs": 10
   }
 }

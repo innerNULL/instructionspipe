@@ -127,8 +127,10 @@ def wandb_init(key: str, project: str) -> None:
 
 def model_and_tokenizer_init(
     model_name_or_path: str, 
-    tokenizer_name_or_path: str
+    tokenizer_name_or_path: str,
+    adapter_conf: Dict={"type": None}
 ) -> Tuple[PreTrainedModel, PreTrainedTokenizer]:
+    user_peft: bool = (adapter_conf["type"] is not None)
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
@@ -136,28 +138,26 @@ def model_and_tokenizer_init(
     )
     model: PreTrainedModel = AutoModelForCausalLM.from_pretrained(
         model_name_or_path,
-        quantization_config=bnb_config,
+        quantization_config=bnb_config if user_peft else None,
         trust_remote_code=True,
-        #device_map={"": PartialState().process_index},
-        device_map="auto",
-        #device_map={'':torch.cuda.current_device()}
-        #device_map = {"": Accelerator().process_index}
+        device_map="auto"
     )
     tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
         tokenizer_name_or_path
     )
-    lora_config = LoraConfig(
-        r=8, # LoRA rank
-        lora_alpha=16, # Scaling factor
-        target_modules=["q_proj", "v_proj"], # Target specific modules to apply LoRA
-        lora_dropout=0.1,
-        bias="none",
-        task_type="CAUSAL_LM",
-    )
-    #model = prepare_model_for_kbit_training(model)
-    model = get_peft_model(model, lora_config)
-    #accelerator = Accelerator() 
-    #model = accelerator.prepare(model)
+    peft_config = None
+    if adapter_conf["type"] is not None:
+        if adapter_conf["type"] == "lora":
+            peft_config = LoraConfig(
+                r=adapter_conf["lora_rank"], # LoRA rank
+                lora_alpha=adapter_conf["lora_alpha"], # Scaling factor
+                target_modules=["q_proj", "v_proj"], # Target specific modules to apply LoRA
+                lora_dropout=adapter_conf["lora_dropout"],
+                bias="none",
+                task_type="CAUSAL_LM",
+            )
+    if peft_config is not None:
+        model = get_peft_model(model, peft_config)
     return model, tokenizer
 
 
@@ -168,6 +168,7 @@ def main() -> None:
     model_conf: Dict = configs["model"]
     data_conf: Dict = configs["data"]
     train_conf: Dict = configs["train"]
+    peft_conf: Dict = configs["peft"]
     
     wandb_init(wandb_conf["key"], wandb_conf["project"])
     
@@ -191,7 +192,8 @@ def main() -> None:
     )
     model, tokenizer = model_and_tokenizer_init(
         model_conf["model_name_or_path"], 
-        model_conf["tokenizer_name_or_path"]
+        model_conf["tokenizer_name_or_path"],
+        adapter_conf=peft_conf
     )
     collator: DataCollatorForChatML = DataCollatorForChatML(
         tokenizer=tokenizer,
@@ -200,6 +202,7 @@ def main() -> None:
     )
     train_config = SFTConfig(
         per_device_train_batch_size=2,
+        per_device_eval_batch_size=2,
         gradient_accumulation_steps=4,
         optim="paged_adamw_32bit",
         logging_steps=1,
@@ -207,11 +210,11 @@ def main() -> None:
         fp16=model_conf["quantization"],
         max_grad_norm=0.3,
         num_train_epochs=train_conf["num_epochs"],
-        save_strategy="epoch",
-        evaluation_strategy="epoch",
-        eval_steps=0.2,
+        save_strategy="steps",
+        evaluation_strategy="steps",
+        save_steps=0.05,
+        eval_steps=0.05,
         warmup_ratio=0.05,
-        save_steps=500,
         save_total_limit=3,
         report_to="wandb",  
         save_safetensors=False,
@@ -223,6 +226,7 @@ def main() -> None:
         dataset_kwargs={"skip_prepare_dataset": True},
         remove_unused_columns=False,
         packing=True,
+        eval_on_start=True,
         group_by_length=False # Sad but not sure how to use this
     )
     trainer = SFTTrainer(
