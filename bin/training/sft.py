@@ -128,7 +128,8 @@ def wandb_init(key: str, project: str) -> None:
 def model_and_tokenizer_init(
     model_name_or_path: str, 
     tokenizer_name_or_path: str,
-    adapter_conf: Dict={"type": None}
+    adapter_conf: Dict={"type": None},
+    pad_token: str="<|finetune_right_pad|>"
 ) -> Tuple[PreTrainedModel, PreTrainedTokenizer]:
     user_peft: bool = (adapter_conf["type"] is not None)
     bnb_config = BitsAndBytesConfig(
@@ -145,6 +146,17 @@ def model_and_tokenizer_init(
     tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
         tokenizer_name_or_path
     )
+    if tokenizer.pad_token is None: 
+        if tokenizer.unk_token is not None:
+            tokenizer.add_special_tokens({'pad_token': tokenizer.unk_token})
+            model.resize_token_embeddings(len(tokenizer))
+            print("Using `tokenizer.unk_token` as `tokenizer.pad_token`")
+    if tokenizer.pad_token is None:
+        #tokenizer.pad_token = pad_token
+        tokenizer.add_special_tokens({'pad_token': pad_token})
+        model.resize_token_embeddings(len(tokenizer))
+        print("Using '%s' as `tokenizer.pad_token`" % pad_token)
+    assert(tokenizer.pad_token != tokenizer.eos_token)
     peft_config = None
     if adapter_conf["type"] is not None:
         if adapter_conf["type"] == "lora":
