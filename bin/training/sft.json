@@ -1,0 +1,23 @@
+{
+  "wandb": {
+    "project": "work-asus-llm_text_summ",
+    "key": "7ee24ec02c0fe15bbb344b19233c7c619d03ef8d"
+  },
+  "model": {
+    "model_name_or_path": "google/gemma-2-2b-it",
+    "tokenizer_name_or_path": "google/gemma-2-2b-it",
+    "quantization": true
+  },
+  "data": {
+    "train_data_path": "./demo_data/training/train_chatml.jsonl",
+    "val_data_path": "./demo_data/training/val_chatml.jsonl",
+    "train_size": 10000,
+    "val_size": 30,
+    "chatml_col": "msgs"
+  },
+  "train": {
+    "out_dir": "./_sft_dev",
+    "learning_rate": 0.00001,
+    "num_epochs": 10
+  }
+}
