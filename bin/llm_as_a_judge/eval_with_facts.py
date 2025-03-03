@@ -660,6 +660,8 @@ async def main() -> None:
             }
             for col in configs["extra_cols"]:
                 out[col] = raw_sample[col]
+            if "name" not in out:
+                out["name"] = "n/a"
             inf_results.append(out)
         out_file = open(out_data_path, "w")
         for result in inf_results:
