@@ -9,5 +9,6 @@
   "non_system_role": true,
   "remove_last_msg": true,
   "max_new_tokens": 128,
-  "gen_text_col": "gen_text"
+  "gen_text_col": "gen_text",
+  "gt_text_col": "msgs"
 }
