@@ -1,0 +1,14 @@
+{
+  "in_data_path": "./demo_data/training/val_chatml.jsonl",
+  "out_data_path": "./val_chatml.jsonl.inf.jsonl",
+  "model_name_or_path": "./_sft_dev/checkpoint-60/",
+  "tokenizer_name_or_path": "google/gemma-2-2b-it",
+  "is_adapter": true,
+  "device": "cuda:3",
+  "chatml_col": "msgs",
+  "non_system_role": true,
+  "remove_last_msg": true,
+  "max_new_tokens": 128,
+  "gen_text_col": "gen_text",
+  "gt_text_col": "msgs"
+}
