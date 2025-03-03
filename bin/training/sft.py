@@ -52,7 +52,8 @@ from accelerate import PartialState
 
 def chatml_check_and_adjust(
     chatml: List[Dict], 
-    model: str
+    model: str,
+    remove_null: bool=True
 ) -> List[Dict]:
     assert(len(chatml) > 1)
     assert(chatml[0]["role"] in {"system", "user"})
@@ -66,6 +67,10 @@ def chatml_check_and_adjust(
                     {"role": "assistant", "content": "Ok."}
                 ] + chatml[1:]
             break
+    if remove_null:
+        for msg in chatml:
+            if msg["content"] is None:
+                msg["content"] = ""
     return chatml
 
 
