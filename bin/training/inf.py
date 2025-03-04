@@ -108,6 +108,7 @@ def main() -> None:
         json.loads(x) for x in open(in_data_path, "r").read().split("\n")
         if x not in {""}
     ]
+    random.seed(2)
     random.shuffle(data)
     model, tokenizer = model_and_tokenizer_init(
         model_name_or_path, 
