@@ -108,6 +108,7 @@ def main() -> None:
         json.loads(x) for x in open(in_data_path, "r").read().split("\n")
         if x not in {""}
     ]
+    random.seed(2)
     random.shuffle(data)
     model, tokenizer = model_and_tokenizer_init(
         model_name_or_path, 
@@ -127,6 +128,10 @@ def main() -> None:
             msgs = msgs[:-1]
         if non_system_role:
             msgs = chatml_check_and_adjust(msgs, True)
+        
+        for msg in msgs:
+            if msg["content"] is None:
+                msg["content"] = ""
 
         prompt: str = tokenizer.apply_chat_template(msgs, tokenize=False)
         inputs: BatchEncoding = tokenizer(prompt, return_tensors="pt").to(device)

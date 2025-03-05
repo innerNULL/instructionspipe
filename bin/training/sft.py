@@ -251,7 +251,8 @@ def main() -> None:
         train_dataset=datasets["train"],
         eval_dataset=datasets["val"],
         args=train_config,
-        data_collator=collator
+        data_collator=collator,
+        processing_class=collator.tokenizer
     )
     trainer.train()
     return
