@@ -128,6 +128,10 @@ def main() -> None:
             msgs = msgs[:-1]
         if non_system_role:
             msgs = chatml_check_and_adjust(msgs, True)
+        
+        for msg in msgs:
+            if msg["content"] is None:
+                msg["content"] = ""
 
         prompt: str = tokenizer.apply_chat_template(msgs, tokenize=False)
         inputs: BatchEncoding = tokenizer(prompt, return_tensors="pt").to(device)
