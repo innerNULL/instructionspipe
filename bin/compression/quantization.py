@@ -110,7 +110,7 @@ def main() -> None:
     )
     recipe = [
         SmoothQuantModifier(smoothing_strength=0.8),
-        GPTQModifier(scheme="W8A8", targets="Linear", ignore=["lm_head"]),
+        GPTQModifier(scheme="W4A8", targets="Linear", ignore=["lm_head"]),
     ]
     oneshot(
         model=model,

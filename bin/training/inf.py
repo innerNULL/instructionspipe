@@ -81,6 +81,7 @@ def model_and_tokenizer_init(
     tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
         tokenizer_name_or_path
     )
+    model.eval()
     return model, tokenizer
 
 
@@ -135,7 +136,8 @@ def main() -> None:
 
         prompt: str = tokenizer.apply_chat_template(msgs, tokenize=False)
         inputs: BatchEncoding = tokenizer(prompt, return_tensors="pt").to(device)
-        outputs = model.generate(inputs.input_ids, max_new_tokens=max_new_tokens)
+        #outputs = model.generate(inputs.input_ids, max_new_tokens=max_new_tokens)
+        outputs = model.generate(**inputs, max_new_tokens=max_new_tokens)
         generated_ids: Tensor = outputs[:, inputs.input_ids.shape[1]:]
         
         gen_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
