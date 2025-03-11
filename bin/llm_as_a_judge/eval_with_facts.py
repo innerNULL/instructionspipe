@@ -594,9 +594,9 @@ def json_query_llm_msg(
 
 def facts_input_load(
     input_data: List[Dict], 
-    src_text_col: str | List[Dict], 
-    out_text_col: str | List[Dict], 
-    instruction_col: str | List[Dict], 
+    src_text_col: str, 
+    out_text_col: str, 
+    instruction_col: str, 
     gt_factuality_col: Optional[str]=None, 
     gt_eligibility_col: Optional[str]=None,
     src_text_idx: Optional[int]=None,
@@ -605,11 +605,6 @@ def facts_input_load(
 ) -> List[FactsInput]:
     out: List[FactsInput] = []
     for data in input_data:
-        src_text_data: str | List[Dict] = data[src_text_col]
-        out_text_data: str | List[Dict] = data[out_text_col]
-        instruction_data: Optional[str | List[Dict]] = (
-            data.get(instruction_col, None)
-        )
         src_text: str = json_query_llm_msg(data, src_text_col, src_text_idx)
         out_text: str = json_query_llm_msg(data, out_text_col, out_text_idx)
         instruction: str = json_query_llm_msg(data, instruction_col, instruction_idx)
