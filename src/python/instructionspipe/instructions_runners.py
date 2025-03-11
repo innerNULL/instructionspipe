@@ -10,6 +10,7 @@ from typing import Union, Optional, List, Dict, Coroutine, Callable, Any, Set
 
 from .instructions import instructions_to_output
 from .instructions import instruction_is_empty
+from .instructions import instruction_to_sys_prompt
 from .llm_cli import LlmCli
 from .instructions import Instructions, Instruction
 from .constants import EMPTY_VAL
@@ -53,22 +54,6 @@ class InstructionsRunnerBase:
             raise "Not supported condition 2"
             return input_data
  
-    def build_sys_msg(
-        self, 
-        in_data: Dict[str, str], 
-        instruction: Instruction
-    ) -> str:
-        out: str = ""
-        if instruction.content is not None:
-            out += "## Instruction\n%s\n\n" % instruction.content
-        if instruction.role is not None:
-            out += "## Your Role\n%s\n\n" % instruction.role
-        if instruction.input_desc is not None:
-            out += "## Your Given Input\n%s\n\n" % instruction.input_desc
-        if instruction.output_desc is not None:
-            out += "## The Extected Output\n%s\n\n" % instruction.output_desc
-        return out
-
     def build_user_msg(
         self, 
         in_data: Dict[str, str], 
@@ -93,7 +78,7 @@ class InstructionsRunnerBase:
             out = [
                 {
                     "role": "system",
-                    "content": self.build_sys_msg(in_data, instruction)
+                    "content": instruction_to_sys_prompt(instruction)
                 },
                 {
                     "role": "user",
