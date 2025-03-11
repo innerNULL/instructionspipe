@@ -577,19 +577,42 @@ async def llms_init(configs: List[Dict]) -> Dict[str, LlmCli]:
     return out
 
 
+def json_query_llm_msg(
+    data: Dict, 
+    col: str, 
+    idx: Optional[str]=None
+) -> None:
+    out: Optional[str] = None
+    in_data: Optional[str | List[Dict]] = data.get(col, None)
+    if in_data is not None:
+        out = (
+            in_data if isinstance(in_data, str)
+            else in_data[idx]["content"]
+        )
+    return out
+
+
 def facts_input_load(
     input_data: List[Dict], 
-    src_text_col: str, 
-    out_text_col: str, 
-    instruction_col: str, 
-    gt_factuality_col: Optional[str] = None, 
-    gt_eligibility_col: Optional[str] = None
+    src_text_col: str | List[Dict], 
+    out_text_col: str | List[Dict], 
+    instruction_col: str | List[Dict], 
+    gt_factuality_col: Optional[str]=None, 
+    gt_eligibility_col: Optional[str]=None,
+    src_text_idx: Optional[int]=None,
+    out_text_idx: Optional[int]=None,
+    instruction_idx: Optional[int]=None
 ) -> List[FactsInput]:
     out: List[FactsInput] = []
     for data in input_data:
-        src_text: str = data[src_text_col]
-        out_text: str = data[out_text_col]
-        instruction: str = data.get(instruction_col, None)
+        src_text_data: str | List[Dict] = data[src_text_col]
+        out_text_data: str | List[Dict] = data[out_text_col]
+        instruction_data: Optional[str | List[Dict]] = (
+            data.get(instruction_col, None)
+        )
+        src_text: str = json_query_llm_msg(data, src_text_col, src_text_idx)
+        out_text: str = json_query_llm_msg(data, out_text_col, out_text_idx)
+        instruction: str = json_query_llm_msg(data, instruction_col, instruction_idx)
         gt_factuality: Optional[float] = data.get(gt_factuality_col, None)
         gt_eligibility: Optional[float] = data.get(gt_eligibility_col, None)
         
@@ -632,7 +655,10 @@ async def main() -> None:
                 configs["out_text_field"], 
                 configs["instruction_field"],
                 configs["gt_factuality_field"],
-                configs["gt_eligibility_field"]
+                configs["gt_eligibility_field"],
+                configs["in_text_idx"],
+                configs["out_text_idx"],
+                configs["instruction_idx"]
             )[0]
             multi_judgements: MultiJudgements = await facts_metrics.run(sample)
             factuality: float = multi_judgements.factuality
