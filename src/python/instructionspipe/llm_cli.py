@@ -110,7 +110,9 @@ class LlmCli:
                 temperature=self.temperature if temperature is None else temperature,
                 max_tokens=max_tokens,
                 top_p=self.top_p,
-                response_format=json_schema
+                # TODO:
+                # Remove this as reasoning models (e.g. DS-R1) does not support constraint decoding
+                #response_format=json_schema
             )
             self.cache.write(cache_key, out.to_json())
         return out
