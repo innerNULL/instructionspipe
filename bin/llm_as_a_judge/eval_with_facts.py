@@ -387,7 +387,7 @@ class LlmCli:
             temperature=self.temperature if temperature is None else temperature,
             max_tokens=max_tokens,
             top_p=self.top_p,
-            response_format=json_schema
+            #response_format=json_schema
         )
 
 
@@ -433,19 +433,9 @@ class FactsMetrics:
         print("Run init factuality eval")
         resp_1 = await self.llms[model].async_run(msgs)
         result_1: str = llm_json_clean(resp_1.choices[0].message.content)
+        if "deepseek" in model.lower():
+            result_1 = result_1.split("</think>")[-1]
         msgs.append({"role": "assistant", "content": result_1})
-        """
-        user_msg_2 = {
-            "role": "user", 
-            "content": self.build_factuality_self_refine_prompt(facts_input) 
-        }
-        msgs.append(user_msg_2)
-        print("Run factuality eval double check")
-        resp_2 = await self.llms[model].async_run(msgs)
-        result_2: str = resp_2.choices[0].message.content
-        msgs.append({"role": "assistant", "content": result_2})
-        """
-
         out: Judgement = Judgement()
         out.msgs = json.dumps(msgs)
         out.name = "factuality"
@@ -454,10 +444,6 @@ class FactsMetrics:
                 1.0 if json.loads(result_1)["label"] == "supported" 
                 else 0.0
             )
-            """
-            score_2: float = 1.0 if "yes" in result_2.lower() else 0.0
-            score: float = (score_1 + score_2) / 2
-            """
             score: float = score_1
             out.score = score
             out.result = json.loads(result_1)["label"]
@@ -479,6 +465,8 @@ class FactsMetrics:
         sys_prompt = sys_prompt.replace("__RESPONSE__", facts_input.gen_text)
         msgs: List[Dict] = [{"role": "user", "content": sys_prompt}]
         resp: str = (await self.llms[model].async_run(msgs)).choices[0].message.content
+        if "deepseek" in model.lower():
+            resp = resp.split("</think>")[-1]
         msgs.append({"role": "assistant", "content": resp})
         print("Run eligibility eval")
         rationale: str = resp
@@ -486,7 +474,7 @@ class FactsMetrics:
         out.name = "eligibility"
         try:
             result: str = json.loads(
-                resp.split("```json")[-1].replace("```", "")
+                resp.split("```json")[-1].split("```")[0].replace("```", "")
             )["Instruction Following"]
             score: float = 0.0
             if result == "Minor Issue(s)":
