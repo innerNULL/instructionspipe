@@ -28,6 +28,20 @@ class Instructions(BaseModel):
     finished: bool = False
 
 
+def instruction_to_sys_prompt(instruction: Instruction) -> str:
+    #out: str = "Following are the details of the task you need to finish.\n"
+    out: str = ""
+    if instruction.content is not None:
+        out += "## Instruction\n%s\n\n" % instruction.content
+    if instruction.role is not None:
+        out += "## Your Role\n%s\n\n" % instruction.role
+    if instruction.input_desc is not None:
+        out += "## Your Given Input\n%s\n\n" % instruction.input_desc
+    if instruction.output_desc is not None:
+        out += "## The Expected Output\n%s\n\n" % instruction.output_desc
+    return out
+
+
 def instructions_init_by_configs(
     configs: List[Dict]
 ) -> Instructions:

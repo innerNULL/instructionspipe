@@ -4,6 +4,9 @@
   "in_text_field": "in_text",
   "out_text_field": "out_text",
   "instruction_field": "instruction",
+  "in_text_idx": null,
+  "out_text_idx": null,
+  "instruction_idx": null,
   "gt_factuality_field": "gt_factuality",
   "gt_eligibility_field": "gt_eligibility",
   "max_sample_size": 10,
@@ -11,7 +14,7 @@
   "llms": [
     {
       "api_type": "azure",
-      "api_url": "https://ai-multiagentcopilot952957483983.openai.azure.com/",
+      "api_url": "",
       "api_key": "",
       "api_version": "2024-02-15-preview",
       "model": "gpt-4o-mini",
@@ -22,7 +25,7 @@
     },
     {
       "api_type": "azure",
-      "api_url": "https://ai-multiagentcopilot952957483983.openai.azure.com/",
+      "api_url": "",
       "api_key": "",
       "api_version": "2024-02-15-preview",
       "model": "gpt-4o",
