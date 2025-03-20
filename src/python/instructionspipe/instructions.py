@@ -3,6 +3,7 @@
 # date: 2024-12-09
 
 
+import pdb
 from typing import Union, Optional, List, Dict, Coroutine, Callable, Any, Set
 from pydantic import BaseModel
 
@@ -10,9 +11,11 @@ from .constants import INVALID_VALS
 
 
 class Instruction(BaseModel):
+    # Instruction
     name: str
     input_desc: Optional[str] = None
     output_desc: Optional[str] = None
+    output_fmt: Optional[str] = None
     content: Optional[str] = None
     role: Optional[str] = None
     scope: Optional[List[str]] = None
@@ -20,6 +23,7 @@ class Instruction(BaseModel):
     finished: bool = False
     stage: Optional[int] = None
     session_id: Optional[str] = None
+    instruction_id: Optional[str] = None
 
 
 class Instructions(BaseModel):
@@ -28,7 +32,7 @@ class Instructions(BaseModel):
     finished: bool = False
 
 
-def instruction_to_sys_prompt(instruction: Instruction) -> str:
+def instruction_to_sys_prompt_v0(instruction: Instruction) -> str:
     #out: str = "Following are the details of the task you need to finish.\n"
     out: str = ""
     if instruction.content is not None:
@@ -39,6 +43,21 @@ def instruction_to_sys_prompt(instruction: Instruction) -> str:
         out += "## Your Given Input\n%s\n\n" % instruction.input_desc
     if instruction.output_desc is not None:
         out += "## The Expected Output\n%s\n\n" % instruction.output_desc
+    return out
+
+
+def instruction_to_sys_prompt(instruction: Instruction) -> str:
+    out: str = "Following are the details of the task you need to finish.\n\n"
+    if instruction.role is not None:
+        out += "## Your Role\n%s\n\n" % instruction.role
+    if instruction.input_desc is not None:
+        out += "## Your Given Input\n%s\n\n" % instruction.input_desc
+    if instruction.output_desc is not None:
+        out += "## The Expected Output\n%s\n\n" % instruction.output_desc
+    if instruction.output_fmt is not None:
+        out += "## Output Format\n%s\n\n" % instruction.output_fmt
+    if instruction.content is not None:
+        out += "## Instruction Misc\n%s\n\n" % instruction.content
     return out
 
 

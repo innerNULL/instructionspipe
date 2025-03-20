@@ -4,12 +4,14 @@
       "name": "demography",
       "role": "You are a clinical expert. ",
       "content": "Extract patient's demography info.",
+      "output_fmt": "A item list, which contains gender and age.",
       "scope": ["patient"]
     },
     {
       "name": "allergies",
       "role": "You are a clinical expert. ",
       "content": "Extract patient's allergies.",
+      "output_fmt": "Markdown items list",
       "scope": ["allergies"]
     },
     {
