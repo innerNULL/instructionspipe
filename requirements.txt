@@ -1,3 +1,6 @@
+duckdb
+langchain-core==0.3.47
+langchain-community==0.3.20
 openai>=1.57.0
 pydantic>=2.10.3
-duckdb
+rank-bm25==0.2.2
