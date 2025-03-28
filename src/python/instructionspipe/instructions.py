@@ -10,6 +10,11 @@ from pydantic import BaseModel
 from .constants import INVALID_VALS
 
 
+class InContextExample(BaseModel):
+    in_text: str
+    out_text: str
+
+
 class Instruction(BaseModel):
     # Instruction name
     name: str
