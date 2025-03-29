@@ -3,9 +3,13 @@
 # date: 2024-12-09
 
 
+import json
 import pdb
 from typing import Union, Optional, List, Dict, Coroutine, Callable, Any, Set
 from pydantic import BaseModel
+from langchain_core.embeddings import Embeddings
+from langchain_core.retrievers import BaseRetriever
+from langchain_core.vectorstores import VectorStore
 
 from .constants import INVALID_VALS
 
@@ -50,6 +54,66 @@ class Instructions(BaseModel):
     instructions: List[Instruction]
     result: Optional[Dict[str, str]] = None
     finished: bool = False
+
+
+def instruction_postproc_ic_ralm(
+    instruction: Optional[Instruction], 
+    input_data: str | Dict[str, str],
+    retriever: Optional[BaseRetriever | Dict[str, BaseRetriever]],
+    keys: Optional[List[str]]=None,
+    k: int=1,
+    embedding: Optional[Embeddings]=None,
+    search_args: Optional[Dict]={},
+    example_input_col: str="in_text",
+    example_output_col: str="out_text"
+) -> Optional[Instruction]:
+    """
+    Ref 
+    * https://arxiv.org/abs/2302.00083
+
+    Args:
+        instruction: Target `Instruction` instance.
+        input_data: Input data of this instruction
+        retriever: LangChain's `BaseRetriever`.
+        k: Top-k retrieval parameter.
+    """
+    if instruction is None:
+        return instruction
+    if keys is None and isinstance(input_data, dict):
+        keys = list(input_data.keys())
+    
+    query: str = ""
+    if isinstance(input_data, dict):
+        query = json.dumps(
+            {k: v for k, v in input_data.items() if k in keys},
+            indent=2
+        )
+    elif isinstance(input_data, str):
+        query = input_data
+    else:
+        raise Exception("Type error caused by `input_data`")
+
+    instruction.examples = []
+    if isinstance(retriever, dict):
+        if instruction.name in retriever:
+            retriever = retriever[instruction.name]
+        elif (
+            instruction.instruction_id is not None
+            and instruction.instruction_id in retriever
+        ):
+            retriever = retriever[instruction.instruction_id]
+        else:
+            raise Exception("Invalid `retriever`")
+    results: List[Document] = retriever.invoke(query, k=k)
+    icl_examples_desc: str = ""
+    for i, doc in enumerate(results[:k]):
+        data: Dict = results[i].metadata
+        example: InContextExample = InContextExample(
+            in_text=data[example_input_col],
+            out_text=data[example_output_col]
+        )
+        instruction.examples.append(example)
+    return instruction
 
 
 def instruction_to_sys_prompt_v0(instruction: Instruction) -> str:
