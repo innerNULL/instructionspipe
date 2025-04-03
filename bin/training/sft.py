@@ -134,7 +134,8 @@ def model_and_tokenizer_init(
     model_name_or_path: str, 
     tokenizer_name_or_path: str,
     adapter_conf: Dict={"type": None},
-    pad_token: str="<|finetune_right_pad|>"
+    pad_token: str="<|finetune_right_pad|>",
+    hf_token: Optional[str]=None
 ) -> Tuple[PreTrainedModel, PreTrainedTokenizer]:
     user_peft: bool = (adapter_conf["type"] is not None)
     bnb_config = BitsAndBytesConfig(
@@ -146,10 +147,12 @@ def model_and_tokenizer_init(
         model_name_or_path,
         quantization_config=bnb_config if user_peft else None,
         trust_remote_code=True,
-        device_map="auto"
+        device_map="auto",
+        token=hf_token
     )
     tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
-        tokenizer_name_or_path
+        tokenizer_name_or_path,
+        token=hf_token
     )
     if tokenizer.pad_token is None: 
         if tokenizer.unk_token is not None:
@@ -181,6 +184,7 @@ def model_and_tokenizer_init(
 def main() -> None:
     configs: Dict = json.loads(open(sys.argv[1], "r").read())
     print(configs)
+    hf_conf: Dict = configs["hf"]
     wandb_conf: Dict = configs["wandb"]
     model_conf: Dict = configs["model"]
     data_conf: Dict = configs["data"]
@@ -210,7 +214,8 @@ def main() -> None:
     model, tokenizer = model_and_tokenizer_init(
         model_conf["model_name_or_path"], 
         model_conf["tokenizer_name_or_path"],
-        adapter_conf=peft_conf
+        adapter_conf=peft_conf,
+        hf_token=hf_conf["token"]
     )
     collator: DataCollatorForChatML = DataCollatorForChatML(
         tokenizer=tokenizer,
@@ -218,8 +223,8 @@ def main() -> None:
         messages_key=data_conf["chatml_col"]
     )
     train_config = SFTConfig(
-        per_device_train_batch_size=2,
-        per_device_eval_batch_size=2,
+        per_device_train_batch_size=train_conf["per_device_train_batch_size"],
+        per_device_eval_batch_size=train_conf["per_device_eval_batch_size"],
         gradient_accumulation_steps=4,
         optim="paged_adamw_32bit",
         logging_steps=1,
