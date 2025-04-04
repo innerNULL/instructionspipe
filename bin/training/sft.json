@@ -3,12 +3,12 @@
     "token": ""
   },
   "wandb": {
-    "project": "work-asus-llm_text_summ",
+    "project": "instructionspipe-dev",
     "key": ""
   },
   "model": {
-    "model_name_or_path": "google/gemma-2-2b-it",
-    "tokenizer_name_or_path": "google/gemma-2-2b-it",
+    "model_name_or_path": "meta-llama/Llama-3.2-3B-Instruct",
+    "tokenizer_name_or_path": "meta-llama/Llama-3.2-3B-Instruct",
     "quantization": true
   },
   "peft": {
@@ -26,9 +26,9 @@
   },
   "train": {
     "out_dir": "./_sft_dev",
-    "learning_rate": 0.001,
+    "learning_rate": 0.0001,
     "num_epochs": 10,
-    "per_device_train_batch_size": 4,
-    "per_device_eval_batch_size": 4
+    "per_device_train_batch_size": 2,
+    "per_device_eval_batch_size": 2
   }
 }
