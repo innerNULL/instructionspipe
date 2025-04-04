@@ -1,0 +1,22 @@
+{
+  "in_data_path": "/path/to/your/json/lines/file.jsonl",
+  "out_data_path": "/path/of/your/desired/output/json/lines/file.jsonl",
+  "out_col": "gen_text",
+  "llm": {
+    "model": "hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4",
+    "base_url": "",
+    "api_key": "null",
+    "temperature": "0.01",
+    "max_tokens": 30000
+  },
+  "chatml": [
+    {
+      "role": "system",
+      "col": "system_message_col"
+    },
+    {
+      "role": "user",
+      "col": "user_message_col"
+    }
+  ]
+}
