@@ -100,6 +100,7 @@ def main() -> None:
     gen_text_col: str = configs["gen_text_col"]
     gt_text_col: str = configs["gt_text_col"]
     out_data_path: str = configs["out_data_path"]
+    extra_cols: List[str] = configs["extra_cols"]
 
     data: Optional[List[Dict]] = None
     model: Optional[PreTrainedModel] = None
@@ -156,6 +157,8 @@ def main() -> None:
             "in_text": in_text,
             "instruction": instruction
         }
+        for col in extra_cols:
+            out[col] = sample[col] 
         outs.append(out)
     
     file = open(out_data_path, "w")
