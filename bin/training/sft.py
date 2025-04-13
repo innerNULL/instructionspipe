@@ -225,7 +225,8 @@ def main() -> None:
     train_config = SFTConfig(
         per_device_train_batch_size=train_conf["per_device_train_batch_size"],
         per_device_eval_batch_size=train_conf["per_device_eval_batch_size"],
-        gradient_accumulation_steps=4,
+        gradient_accumulation_steps=train_conf["gradient_accumulation_steps"],
+        max_length=train_conf["max_length"],
         optim="paged_adamw_32bit",
         logging_steps=1,
         learning_rate=train_conf["learning_rate"],
