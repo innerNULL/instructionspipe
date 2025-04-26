@@ -1,0 +1,34 @@
+{
+  "in_data_path": "/mnt/aics-ai-saas-userdata/yutong_liu/data/caa/reportgen/poc/example_report_male_002.pdf",
+  "workspace": "./_workspace",
+  "langchain": {
+    "langsmith_tracing": true, 
+    "langsmith_endpoint": "https://api.smith.langchain.com",
+    "langsmith_api_key": "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",
+    "langsmith_project": "instructionspipe-dev-v2025.0410.1814"
+  },
+  "llms": [
+    {
+      "model": "gpt-4o",
+      "model_provider": "azure_openai",
+      "azure_endpoint": "",
+      "openai_api_version": "2024-08-01-preview",
+      "openai_api_key": "",
+      "max_retries": 3,
+      "timeout": 300,
+      "temperature": 0.01,
+      "max_tokens": 16384
+    },
+    {
+      "model": "gpt-4o-mini",
+      "model_provider": "azure_openai",
+      "azure_endpoint": "",
+      "openai_api_version": "2024-08-01-preview",
+      "openai_api_key": "",
+      "max_retries": 3,
+      "timeout": 300,
+      "temperature": 0.01,
+      "max_tokens": 16384
+    }
+  ]
+}

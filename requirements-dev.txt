@@ -1,5 +1,5 @@
 -r ./requirements.txt
-accelerate>=0.27.2
+accelerate>=1.6.0
 bitsandbytes>=0.43.0
 datasets>=2.16.1
 datasketch==1.6.5
@@ -11,7 +11,7 @@ nltk>=3.8.1
 numba>=0.58.1
 numpy>=1.24.4
 pandas==2.2.3
-peft>=0.10.0
+peft>=0.15.1
 safetensors>=0.5.2
 sentencepiece>=0.2.0
 scikit-learn==1.6.1
@@ -21,6 +21,6 @@ tokenizers>=0.21.0
 torch>=2.1.2
 torchmetrics>=1.3.0.post0
 tqdm>=4.66.1
-transformers>=4.50.2
-trl>=0.8.1
+transformers>=4.50.3
+trl>=0.16.0
 wandb>=0.16.4

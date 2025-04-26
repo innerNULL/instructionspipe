@@ -145,7 +145,7 @@ def model_and_tokenizer_init(
     )
     model: PreTrainedModel = AutoModelForCausalLM.from_pretrained(
         model_name_or_path,
-        quantization_config=bnb_config if user_peft else None,
+        #quantization_config=bnb_config if user_peft else None,
         trust_remote_code=True,
         device_map="auto",
         token=hf_token
@@ -225,7 +225,8 @@ def main() -> None:
     train_config = SFTConfig(
         per_device_train_batch_size=train_conf["per_device_train_batch_size"],
         per_device_eval_batch_size=train_conf["per_device_eval_batch_size"],
-        gradient_accumulation_steps=4,
+        gradient_accumulation_steps=train_conf["gradient_accumulation_steps"],
+        max_length=train_conf["max_length"],
         optim="paged_adamw_32bit",
         logging_steps=1,
         learning_rate=train_conf["learning_rate"],
