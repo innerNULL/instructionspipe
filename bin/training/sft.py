@@ -152,7 +152,8 @@ def model_and_tokenizer_init(
         quantization_config=bnb_config if use_peft else None,
         trust_remote_code=True,
         device_map="auto",
-        token=hf_token
+        token=hf_token,
+        attn_implementation="flash_attention_2"
     )
     tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
         tokenizer_name_or_path,
