@@ -149,7 +149,7 @@ def model_and_tokenizer_init(
         )
     model: PreTrainedModel = AutoModelForCausalLM.from_pretrained(
         model_name_or_path,
-        quantization_config=bnb_config,
+        quantization_config=bnb_config if user_peft else None,
         trust_remote_code=True,
         device_map="auto",
         token=hf_token
