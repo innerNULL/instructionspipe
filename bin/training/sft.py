@@ -149,7 +149,7 @@ def model_and_tokenizer_init(
         )
     model: PreTrainedModel = AutoModelForCausalLM.from_pretrained(
         model_name_or_path,
-        quantization_config=bnb_config if user_peft else None,
+        quantization_config=bnb_config if use_peft else None,
         trust_remote_code=True,
         device_map="auto",
         token=hf_token
@@ -172,6 +172,7 @@ def model_and_tokenizer_init(
     peft_config = None
     if adapter_conf["type"] is not None:
         if adapter_conf["type"] == "lora":
+            print("Training a (Q)LoRA adapter")
             peft_config = LoraConfig(
                 r=adapter_conf["lora_rank"], # LoRA rank
                 lora_alpha=adapter_conf["lora_alpha"], # Scaling factor
