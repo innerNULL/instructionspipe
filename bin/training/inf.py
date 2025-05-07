@@ -64,12 +64,18 @@ def model_and_tokenizer_init(
     is_adapter: bool=True
 ) -> Tuple[PreTrainedModel, PreTrainedTokenizer]:
     model: Optional[PreTrainedModel] = None
+    bnb_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.float16,
+    )
     if is_adapter:
         model = AutoPeftModelForCausalLM.from_pretrained(
             model_name_or_path,
             quantization_config=None,
             trust_remote_code=True,
-            device_map="auto"
+            device_map="auto",
+            #quantization_config=bnb_config,
         )
     else:
         model = AutoModelForCausalLM.from_pretrained(

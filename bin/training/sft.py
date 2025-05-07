@@ -134,21 +134,26 @@ def model_and_tokenizer_init(
     model_name_or_path: str, 
     tokenizer_name_or_path: str,
     adapter_conf: Dict={"type": None},
+    quant_conf: Dict={},
     pad_token: str="<|finetune_right_pad|>",
     hf_token: Optional[str]=None
 ) -> Tuple[PreTrainedModel, PreTrainedTokenizer]:
-    user_peft: bool = (adapter_conf["type"] is not None)
-    bnb_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.float16,
-    )
+    use_peft: bool = (adapter_conf["type"] is not None)
+    bnb_config: Optional[BitsAndBytesConfig] = None
+    if quant_conf.get("load_in_4bit", False) != False:
+        print("QLoRA mode")
+        bnb_config = BitsAndBytesConfig(
+            load_in_4bit=quant_conf["load_in_4bit"],
+            bnb_4bit_quant_type=quant_conf["bnb_4bit_quant_type"],
+            bnb_4bit_compute_dtype=torch.float16,
+        )
     model: PreTrainedModel = AutoModelForCausalLM.from_pretrained(
         model_name_or_path,
-        #quantization_config=bnb_config if user_peft else None,
+        quantization_config=bnb_config if use_peft else None,
         trust_remote_code=True,
         device_map="auto",
-        token=hf_token
+        token=hf_token,
+        attn_implementation="flash_attention_2"
     )
     tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
         tokenizer_name_or_path,
@@ -168,6 +173,7 @@ def model_and_tokenizer_init(
     peft_config = None
     if adapter_conf["type"] is not None:
         if adapter_conf["type"] == "lora":
+            print("Training a (Q)LoRA adapter")
             peft_config = LoraConfig(
                 r=adapter_conf["lora_rank"], # LoRA rank
                 lora_alpha=adapter_conf["lora_alpha"], # Scaling factor
@@ -190,6 +196,7 @@ def main() -> None:
     data_conf: Dict = configs["data"]
     train_conf: Dict = configs["train"]
     peft_conf: Dict = configs["peft"]
+    quant_conf: Dict = configs["quantization"]
     
     wandb_init(wandb_conf["key"], wandb_conf["project"])
     
@@ -215,6 +222,7 @@ def main() -> None:
         model_conf["model_name_or_path"], 
         model_conf["tokenizer_name_or_path"],
         adapter_conf=peft_conf,
+        quant_conf=quant_conf,
         hf_token=hf_conf["token"]
     )
     collator: DataCollatorForChatML = DataCollatorForChatML(
@@ -230,7 +238,8 @@ def main() -> None:
         optim="paged_adamw_32bit",
         logging_steps=1,
         learning_rate=train_conf["learning_rate"],
-        fp16=model_conf["quantization"],
+        #fp16=model_conf["quantization"],
+        fp16=True,
         max_grad_norm=0.3,
         num_train_epochs=train_conf["num_epochs"],
         save_strategy="steps",
