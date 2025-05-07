@@ -8,10 +8,11 @@ CURR_DIR=$(pwd)
 WORKSPACE="./_llm_serv_vllm"
 PYTHON=$(which python3)
 PORT=6789
-VLLM_VERSION="0.7.3"
+VLLM_VERSION="0.8.5.post1"
 HF_TOKEN=""
-MODEL="mistralai/Mistral-7B-Instruct-v0.3"
-CUDA_VISIBLE_DEVICES=1
+MODEL="unsloth/gemma-3-4b-it-unsloth-bnb-4bit"
+TOKENIZER="unsloth/gemma-3-4b-it-unsloth-bnb-4bit"
+CUDA_VISIBLE_DEVICES=0
 MAX_MODEL_LEN=20000
 TENSOR_PARALLEL_SIZE=1
 GPU_MEM_UTILIZATION=0.5
@@ -30,7 +31,7 @@ function build() {
   cd ${CURR_DIR}
   cd ${WORKSPACE}
   ${PYTHON} -m venv ./_pyenv --copies
-  ./_pyenv/bin/pip install vllm==${VLLM_VERSION}
+  ./_pyenv/bin/pip install vllm==${VLLM_VERSION} bitsandbytes
 }
 
 
@@ -41,6 +42,7 @@ function start() {
   CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} \
   VLLM_ALLOW_LONG_MAX_MODEL_LEN=${VLLM_ALLOW_LONG_MAX_MODEL_LEN} \
   ./_pyenv/bin/vllm serve ${MODEL} \
+    --tokenizer ${TOKENIZER} \
     --dtype ${DTYPE} \
     --max_model_len ${MAX_MODEL_LEN} \
     --tensor-parallel-size ${TENSOR_PARALLEL_SIZE} \
