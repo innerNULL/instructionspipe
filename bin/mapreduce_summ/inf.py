@@ -25,6 +25,7 @@ from openai import ChatCompletion
 
 from instructionspipe.impl.mapreduce import run_with_configs
 from instructionspipe.utils import io_jsonl_write
+from instructionspipe.utils import llms_init
 from instructionspipe.instructions import Instruction, Instructions
 from instructionspipe.instructions_runners import InstructionsRunnerBase
 from instructionspipe.llm_cli import LlmCli
@@ -53,11 +54,12 @@ async def inf_with_configs(configs: Dict, append_mode: bool=True) -> None:
             print("* %s" % chatml_meta_path)
             raise e
 
-    llm: LlmCli = LlmCli.new_with_configs(configs["llm"])
+    llms: Dict[str, LlmCli] = llms_init(configs["llms"])
+    default_llm: LlmCli = llms[[x for x in llms.keys()][0]]
 
     # Check
     print("Testing LLM's connection")
-    test_resp: Coroutine = llm.async_run("Hi")
+    test_resp: Coroutine = default_llm.async_run("Hi")
     print("Running 'Hi'")
     test_result: str = (await test_resp).choices[0].message.content
     print(test_result)
@@ -70,7 +72,7 @@ async def inf_with_configs(configs: Dict, append_mode: bool=True) -> None:
     for in_sample in tqdm(in_samples):
         try:
             outputs: Dict = await run_with_configs(
-                llm, in_sample, map_conf, reduce_conf 
+                llms, in_sample, map_conf, reduce_conf 
             )
         except Exception as e:
             print(traceback.format_exc())

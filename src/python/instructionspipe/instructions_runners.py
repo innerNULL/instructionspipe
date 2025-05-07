@@ -19,18 +19,20 @@ from .constants import INVALID_VALS
 
 class InstructionsRunnerBase:
     def __init__(self):
-        self.llm: Optional[LlmCli] = None
+        self.llms: Optional[Dict[str, LlmCli]] = None
         self.instructions: Optional[Instructions] = None
+        self.model_default: Optional[str] = None
 
     @classmethod
     def new_with_llm(
         cls,
-        llm: LlmCli,
+        llms: Dict[str, LlmCli],
         instructions: Optional[Instructions]=None
     ):
         out = cls()
-        out.llm = llm
+        out.llms = llms
         out.instructions = instructions
+        out.model_default = [x for x in llms.keys()][0]
         return out
    
     def build_inputs(
@@ -74,6 +76,10 @@ class InstructionsRunnerBase:
             {"role": "system", "content": None}, 
             {"role": "system", "content": None}
         ]
+        model: str = (
+            instruction.model if instruction.model is not None 
+            else self.model_default
+        )
         if not instruction_is_empty(instruction):
             out = [
                 {
@@ -86,8 +92,8 @@ class InstructionsRunnerBase:
                 }
             ]
         if (
-            "mistral" in self.llm.model.lower()
-            or "gemma" in self.llm.model.lower()
+            "mistral" in model.lower()
+            or "gemma" in model.lower()
         ):
             out[0]["role"] = "user"
             out = [
@@ -122,9 +128,15 @@ class InstructionsRunnerBase:
         chatmls: List[ List[ Dict[str, Optional[str]] ] ] = [
             x.msgs for x in instructions.instructions
         ]
+        llms: List[LlmCli] = [
+            self.llms[x.model] if x.model is not None
+            else self.llms[self.model_default] 
+            for x in instructions.instructions
+        ]
+        assert(len(chatmls) == len(llms))
         tasks: List[Coroutine] = [
-            self.llm.async_run(chatml[-1], chatml[:-1]) 
-            for chatml in chatmls
+            llms[i].async_run(chatmls[i][-1], chatmls[i][:-1]) 
+            for i in range(len(chatmls))
         ]
         resps: List[Optional[ChatCompletion]] = await asyncio.gather(*tasks)
         for i in range(len(instructions.instructions)):

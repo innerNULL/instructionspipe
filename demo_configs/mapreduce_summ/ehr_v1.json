@@ -2,16 +2,18 @@
   "in_data_path": "./demo_data/ehr/faked_0.jsonl",
   "out_data_path": "./_text_mr.jsonl",
   "chatml_path": "./_mr_pipeline_chatmls.jsonl",
-  "llm": {
-    "api_type": "openai",
-    "api_url": "http://0.0.0.0:6789/v1",
-    "api_key": "null",
-    "api_version": "null",
-    "model": "mistralai/Mistral-7B-Instruct-v0.3",
-    "sampling": true, 
-    "temperature": 0.0,
-    "top_p": 0.0001,
-    "seed": 2
-  },
+  "llms": [
+    {
+      "api_type": "openai",
+      "api_url": "http://0.0.0.0:6789/v1",
+      "api_key": "null",
+      "api_version": "null",
+      "model": "unsloth/gemma-3-4b-it-unsloth-bnb-4bit",
+      "sampling": true,
+      "temperature": 0.05,
+      "top_p": 0.05,
+      "seed": 2
+    }
+  ], 
   "pipe": "./demo_configs/mapreduce_summ/ehr_instructions.json"
 }

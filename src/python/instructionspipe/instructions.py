@@ -44,6 +44,8 @@ class Instruction(BaseModel):
     session_id: Optional[str] = None
     # Instruction ID
     instruction_id: Optional[str] = None
+    # LLM
+    model: Optional[str] = None
 
 
 class Instructions(BaseModel):
