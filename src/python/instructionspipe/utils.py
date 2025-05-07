@@ -6,6 +6,16 @@
 import json
 from typing import Dict, List, Any
 
+from .llm_cli import LlmCli
+
+
+def llms_init(configs: List[Dict]) -> Dict[str, LlmCli]:
+    out: Dict[str, LlmCli] = {}
+    for config in configs:
+        name: str = config["model"]
+        out[name] = LlmCli.new_with_configs(config)
+    return out
+
 
 def json2str_kv(json_obj: Dict[str, Any]) -> Dict[str, str]:
     out: Dict[str, str] = {}

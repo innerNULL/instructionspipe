@@ -26,17 +26,17 @@ from ...llm_cli import LlmCli
 
 
 async def run_with_configs(
-    llm: LlmCli,
+    llms: Dict[str, LlmCli],
     inputs: Dict, 
     map_conf: List[Dict], 
     reduce_conf: List[Dict]
 ) -> Dict:
     mapper: InstructionsRunnerBase = InstructionsRunnerBase.new_with_llm(
-        llm=llm, 
+        llms=llms, 
         instructions=instructions_init_by_configs(map_conf)
     )
     reducer: InstructionsRunnerBase = InstructionsRunnerBase.new_with_llm(
-        llm=llm, 
+        llms=llms, 
         instructions=instructions_init_by_configs(reduce_conf)
     )
     init_instructions: Instructions = Instructions(
