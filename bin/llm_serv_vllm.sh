@@ -10,8 +10,8 @@ PYTHON=$(which python3)
 PORT=6789
 VLLM_VERSION="0.8.5.post1"
 HF_TOKEN=""
-MODEL="unsloth/gemma-3-4b-it-unsloth-bnb-4bit"
-TOKENIZER="unsloth/gemma-3-4b-it-unsloth-bnb-4bit"
+MODEL="unsloth/Llama-3.1-8B-Instruct-unsloth-bnb-4bit"
+TOKENIZER="unsloth/Llama-3.1-8B-Instruct-unsloth-bnb-4bit"
 CUDA_VISIBLE_DEVICES=0
 MAX_MODEL_LEN=20000
 TENSOR_PARALLEL_SIZE=1
@@ -31,7 +31,7 @@ function build() {
   cd ${CURR_DIR}
   cd ${WORKSPACE}
   ${PYTHON} -m venv ./_pyenv --copies
-  ./_pyenv/bin/pip install vllm==${VLLM_VERSION} bitsandbytes
+  ./_pyenv/bin/pip install vllm==${VLLM_VERSION} bitsandbytes hf-xet
 }
 
 
