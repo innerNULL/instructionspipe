@@ -38,25 +38,16 @@ cleaned_eval_results as (
     when gen_text <> 'N/A' and src_text <> '' then factuality
     else 1.0
   end as factuality,
-  case
-    when gen_text <> 'N/A' and src_text <> '' then eligibility
-    else 1.0
-  end as eligibility,
-  cast(factuality >= 0.5 as float) as high_factuality,
-  cast(eligibility >= 0.5 as float) as high_eligibility
+  cast(factuality >= 0.5 as float) as high_factuality
   from 
   eval_results
 ),
 eval_avg_metrics as (
   select 
   round(sum(factuality) / count(1), 2) as avg_factuality,
-  round(sum(eligibility) / count(1), 2) as avg_eligibility,
   min(factuality) as min_factuality,
   max(factuality) as max_factuality,
-  min(eligibility) as min_eligibility,
-  max(eligibility) as max_eligibility, 
-  round(sum(high_factuality) / count(1), 2) as high_factuality_rate, 
-  round(sum(high_eligibility) / count(1), 2) as high_eligibility_rate
+  round(sum(high_factuality) / count(1), 2) as high_factuality_rate 
   from 
   cleaned_eval_results
 ),
@@ -64,13 +55,9 @@ eval_avg_metrics_by_inst as (
   select 
   name,
   round(sum(factuality) / count(1), 2) as avg_factuality,
-  round(sum(eligibility) / count(1), 2) as avg_eligibility,
   min(factuality) as min_factuality,
   max(factuality) as max_factuality,
-  min(eligibility) as min_eligibility,
-  max(eligibility) as max_eligibility,
-  round(sum(high_factuality) / count(1), 2) as high_factuality_rate,
-  round(sum(high_eligibility) / count(1), 2) as high_eligibility_rate
+  round(sum(high_factuality) / count(1), 2) as high_factuality_rate
   from
   cleaned_eval_results
   group by name
@@ -78,9 +65,7 @@ eval_avg_metrics_by_inst as (
 eval_avg_metrics_sub as (
   select
   avg_factuality, 
-  avg_eligibility, 
-  high_factuality_rate, 
-  high_eligibility_rate
+  high_factuality_rate 
   from 
   eval_avg_metrics
 ),
@@ -88,9 +73,7 @@ eval_avg_metrics_by_inst_sub as (
   select
   name, 
   avg_factuality,
-  avg_eligibility,
-  high_factuality_rate,
-  high_eligibility_rate
+  high_factuality_rate
   from 
   eval_avg_metrics_by_inst
 )
@@ -99,6 +82,29 @@ select * from eval_avg_metrics_sub;
 
 
 SYS_PROMPT_FACTUALITY_SCORE_RESP_LEVEL: str = \
+"""
+## Your Role
+You're a document verification expert. 
+
+## Your Task 
+Check whether all the information in Response can be:
+* Fully Supported and contained by Evidence.
+* Totally accurate according to the Evidence
+
+## Evidence
+__CONTEXT__
+
+## Response
+__RESPONSE__
+
+## Expected Output
+You must output only a JSON which contains following keys in order:
+* rationale: A brief explanation for the assigned label.
+* label: One of 'supported', 'unsupported', 'contradictory'
+""".strip("\n")
+
+
+SYS_PROMPT_FACTUALITY_SCORE_RESP_LEVEL_v0: str = \
 """
 ## Your Role
 You're a document verification expert. 
@@ -501,7 +507,7 @@ class FactsMetrics:
         multi_judgements: List[Judgements] = []
         funcs: List[Callable] = [
             self.run_factuality_score,
-            self.run_eligibility_score
+            #self.run_eligibility_score
         ]
         for func in funcs:
             tasks: List[Coroutine] = []
