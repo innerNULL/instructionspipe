@@ -4,22 +4,7 @@
 
 set -x
 
-CURR_DIR=$(pwd)
-WORKSPACE="./_llm_serv_vllm"
-PYTHON=$(which python3)
-PORT=6789
-VLLM_VERSION="0.8.5.post1"
-HF_TOKEN=""
-MODEL="unsloth/gemma-3-4b-it-unsloth-bnb-4bit"
-TOKENIZER="unsloth/gemma-3-4b-it-unsloth-bnb-4bit"
-CUDA_VISIBLE_DEVICES=0
-MAX_MODEL_LEN=20000
-TENSOR_PARALLEL_SIZE=1
-GPU_MEM_UTILIZATION=0.5
-DTYPE=bfloat16
-VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
-
-
+source $1
 
 function init() {
   cd ${CURR_DIR}
@@ -31,7 +16,7 @@ function build() {
   cd ${CURR_DIR}
   cd ${WORKSPACE}
   ${PYTHON} -m venv ./_pyenv --copies
-  ./_pyenv/bin/pip install vllm==${VLLM_VERSION} bitsandbytes
+  ./_pyenv/bin/pip install vllm==${VLLM_VERSION} bitsandbytes hf-xet
 }
 
 
@@ -41,14 +26,34 @@ function start() {
   ./_pyenv/bin/huggingface-cli login --token ${HF_TOKEN}
   CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} \
   VLLM_ALLOW_LONG_MAX_MODEL_LEN=${VLLM_ALLOW_LONG_MAX_MODEL_LEN} \
-  ./_pyenv/bin/vllm serve ${MODEL} \
-    --tokenizer ${TOKENIZER} \
-    --dtype ${DTYPE} \
-    --max_model_len ${MAX_MODEL_LEN} \
-    --tensor-parallel-size ${TENSOR_PARALLEL_SIZE} \
-    --gpu-memory-utilization ${GPU_MEM_UTILIZATION} \
-    --port ${PORT} \
-    --enable-prefix-caching 
+  #./_pyenv/bin/vllm serve ${MODEL} \
+  #  --tokenizer ${TOKENIZER} \
+  #  --dtype ${DTYPE} \
+  #  --max_model_len ${MAX_MODEL_LEN} \
+  #  --tensor-parallel-size ${TENSOR_PARALLEL_SIZE} \
+  #  --gpu-memory-utilization ${GPU_MEM_UTILIZATION} \
+  #  --port ${PORT} \
+  #  --enable-prefix-caching \
+  #  --enable-lora \
+  #  --max_lora_rank ${MAX_LORA_RANK} \
+  #  --lora-modules "{\"name\": \"${ADAPTER_NAME}\", \"path\": \"${ADAPTER_CKPT}\", \"base_model_name\": \"${ADAPTER_BASEMODEL}\"}"
+  command="./_pyenv/bin/vllm serve"
+  command="${command} ${MODEL}"
+  command="${command} --tokenizer ${TOKENIZER}"
+  command="${command} --dtype ${DTYPE}"
+  command="${command} --max_model_len ${MAX_MODEL_LEN}"     
+  command="${command} --tensor-parallel-size ${TENSOR_PARALLEL_SIZE}"     
+  command="${command} --gpu-memory-utilization ${GPU_MEM_UTILIZATION}"     
+  command="${command} --port ${PORT}"  
+  command="${command} --enable-prefix-caching"
+  if [[ -n "${ADAPTER_NAME}" && -n "${ADAPTER_CKPT}" ]]; then
+      command="${command} --enable-lora"     
+      command="${command} --max_lora_rank ${MAX_LORA_RANK}"  
+      lora_module="{\"name\":\"${ADAPTER_NAME}\",\"path\":\"${ADAPTER_CKPT}\",\"base_model_name\":\"${ADAPTER_BASEMODEL}\"}"
+      command="${command} --lora-modules ${lora_module}"          
+  fi
+  echo ${command}
+  ${command}
 }
 
 
