@@ -30,6 +30,7 @@ in pkgs.mkShell {
     export CUDA_HOME=${cuda}
     export PATH=${cuda}/bin:$PATH
     export LD_LIBRARY_PATH=${cuda}/lib:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:$LD_LIBRARY_PATH
     echo "🐢 Loaded CUDA ${cuda.version} from ${cuda}"
   '';
 }
