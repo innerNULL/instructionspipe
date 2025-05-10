@@ -8,6 +8,8 @@ let
 
 in pkgs.mkShell {
   buildInputs = with pkgs; [
+    gh
+    vim
     gcc                # C/C++ compiler
     cmake              # Build system
     git                # Version control
