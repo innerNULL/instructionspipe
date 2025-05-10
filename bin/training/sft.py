@@ -153,7 +153,7 @@ def model_and_tokenizer_init(
         trust_remote_code=True,
         device_map="auto",
         token=hf_token,
-        attn_implementation="flash_attention_2"
+        #attn_implementation="flash_attention_2"
     )
     tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
         tokenizer_name_or_path,
@@ -243,7 +243,8 @@ def main() -> None:
         max_grad_norm=0.3,
         num_train_epochs=train_conf["num_epochs"],
         save_strategy="steps",
-        evaluation_strategy="steps",
+        #evaluation_strategy="steps",
+        eval_strategy="steps",     
         save_steps=0.05,
         eval_steps=0.05,
         warmup_ratio=0.05,
