@@ -1,0 +1,17 @@
+{
+  "in_data_path": "./demo_data/training/val_chatml.jsonl",
+  "out_data_path": "./val_chatml.jsonl.inf.jsonl",
+  "model_name_or_path": "meta-llama/Llama-3.2-3B-Instruct",
+  "tokenizer_name_or_path": "meta-llama/Llama-3.2-3B-Instruct",
+  "adapter_name_or_path": "./_sft_dev/checkpoint-16/",
+  "max_lora_rank": 128,
+  "temperature": 0.01, 
+  "top_p": 0.1,
+  "max_new_tokens": 128,     
+  "chatml_col": "msgs",
+  "non_system_role": true,
+  "remove_last_msg": true,
+  "gen_text_col": "gen_text",
+  "gt_text_col": "msgs",
+  "extra_cols": []
+}
