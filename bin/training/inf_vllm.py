@@ -162,8 +162,6 @@ def main() -> None:
             lora_request=lora_req,
             use_tqdm=False
         )[0].outputs[0].text
-        pdb.set_trace()
-        
         sample[gen_text_col] = gen_text
         sample[gt_text_col] = gt_text
         instruction = msgs[0]["content"]
