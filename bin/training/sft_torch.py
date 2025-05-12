@@ -179,8 +179,9 @@ def model_and_tokenizer_init(
             peft_config = LoraConfig(
                 r=adapter_conf["lora_rank"], # LoRA rank
                 lora_alpha=adapter_conf["lora_alpha"], # Scaling factor
-                target_modules=["q_proj", "v_proj"], # Target specific modules to apply LoRA
+                target_modules=adapter_conf["target_modules"],
                 lora_dropout=adapter_conf["lora_dropout"],
+                use_rslora=adapter_conf["use_rslora"],
                 bias="none",
                 task_type="CAUSAL_LM",
             )

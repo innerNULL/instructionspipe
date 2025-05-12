@@ -15,7 +15,9 @@
     "type": "lora",
     "lora_rank": 16,
     "lora_alpha": 32,
-    "lora_dropout": 0.1
+    "lora_dropout": 0.1,
+    "target_modules": ["q_proj", "v_proj", "v_proj"],
+    "use_rslora": true
   },
   "quantization": {
     "load_in_4bit": true, 
