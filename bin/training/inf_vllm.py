@@ -79,7 +79,10 @@ def model_resources_init(
         quantization=None,
         seed=2,
         hf_token=hf_token,
-        max_lora_rank=max_lora_rank
+        max_lora_rank=max_lora_rank,
+        tensor_parallel_size=1,
+        pipeline_parallel_size=torch.cuda.device_count(),
+        distributed_executor_backend="ray"
     )
     sampling_params: SamplingParams = SamplingParams(
         temperature=temperature,
