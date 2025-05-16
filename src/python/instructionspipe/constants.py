@@ -6,7 +6,7 @@
 from typing import Union, Optional, List, Dict, Coroutine, Callable, Any, Set
 
 
-EMPTY_VAL: str = "This can not be handled."
+EMPTY_VAL: str = "   "
 
 
 INVALID_VALS: Set[Optional[str]] = {
