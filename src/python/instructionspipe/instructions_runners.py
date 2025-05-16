@@ -15,6 +15,10 @@ from .llm_cli import LlmCli
 from .instructions import Instructions, Instruction
 from .constants import EMPTY_VAL
 from .constants import INVALID_VALS
+from .logger import get_logger
+
+
+LOGGER = get_logger(__name__)
 
 
 class InstructionsRunnerBase:
@@ -91,10 +95,13 @@ class InstructionsRunnerBase:
                     "content": self.build_user_msg(in_data, instruction)
                 }
             ]
+        else:
+            LOGGER.warning("The instruction is empty, so do ChatML")
         if (
             "mistral" in model.lower()
             or "gemma" in model.lower()
         ):
+            LOGGER.info("Removing system prompt for specific LLMs")
             out[0]["role"] = "user"
             out = [
                 out[0],
