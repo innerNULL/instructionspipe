@@ -16,7 +16,7 @@ nltk>=3.8.1
 numba>=0.58.1
 numpy>=1.9.1
 pandas==2.2.3
-peft>=0.15.1
+peft>=0.15.2,<=0.15.2
 ray[all]>=2.46.0,<=2.46.0
 safetensors>=0.5.2
 sentencepiece>=0.2.0

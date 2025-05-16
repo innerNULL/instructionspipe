@@ -12,6 +12,10 @@ from openai.types.chat.chat_completion import ChatCompletion
 
 from .cache import CacheBase
 from .cache import InMemCache
+from .logger import get_logger
+
+
+LOGGER = get_logger(__name__)
 
 
 class LlmCli:
@@ -91,6 +95,7 @@ class LlmCli:
         #   1. Return 'N/A'
         #   2. Return row input based on some rules
         if msg["content"] is None:
+            LOGGER.info("Return `None` as `msg[\"content\"] is None`")
             return None
         
         chaml: List[Dict] = prefix + [msg]
@@ -101,6 +106,7 @@ class LlmCli:
         out: Optional[ChatCompletion] = None
 
         if cache_val is not None:
+            LOGGER.info("Using cache for prefix \"{}\"".format(chaml))
             out = ChatCompletion.parse_raw(cache_val)
         else:
             out = await self.async_cli.chat.completions.create(
@@ -114,5 +120,6 @@ class LlmCli:
                 # Remove this as reasoning models (e.g. DS-R1) does not support constraint decoding
                 #response_format=json_schema
             )
+            LOGGER.info("Gen text by **{}** for msgs \"{}\"".format(self.model, chaml))
             self.cache.write(cache_key, out.to_json())
         return out
