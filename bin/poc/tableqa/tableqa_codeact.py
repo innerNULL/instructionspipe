@@ -11,6 +11,7 @@ import io
 import tempfile
 import subprocess
 import uuid
+import logging
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Annotated, Literal, Callable, Union, Type, Any
 from langchain_core.messages import AIMessage
@@ -28,6 +29,16 @@ from langgraph.graph.message import add_messages
 from langchain.chat_models import init_chat_model
 from tqdm import tqdm
 
+logging.basicConfig(
+    #level=logging.DEBUG,  # Set the minimum logging level
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("app.log"),  # Log messages to a file
+        logging.StreamHandler()         # Log messages to the console
+    ]
+)
+
 
 PROMPT_SYS: str = \
 """
@@ -38,8 +49,9 @@ answer by writting Python code and run it.
 You should output either:
 - a Python code snippet that provides the solution to the task, or a step 
   towards the solution. Any output you want to extract from the code should 
-  be printed to the console with `print`. Code should be output in a fenced 
-  code block. The code snippet has to be enclosed with <code> and </code>.
+  be printed to the console with `print` (need alse print some description
+  of the output, like what the output is). Code should be output in a fenced 
+  code block. The code snippet must be always enclosed with <code> and </code>.
 
 - text to be shown directly to the user, if you want to ask for more 
   information or provide the final answer.
@@ -48,6 +60,9 @@ In addition to the Python Standard Library, you can use the following
 Python modules:
 * pandas
 """
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class TableQaCodeActState(BaseModel):
@@ -111,7 +126,7 @@ def sandbox_run(code: str, workspace_dir: Optional[str] = None) -> str:
             stderr=subprocess.STDOUT  # Redirect stderr to stdout
         )
         stdout, _ = process.communicate()  # Capture the combined output
-        return stdout
+        return stdout.strip("\n").strip(" ").strip("\n").strip(" ")
     
     finally:
         # Clean up the script file
@@ -135,23 +150,18 @@ async def agent_codeact(state: State) -> Command:
                 instruction
             )
         ))
-    try:
-        resp: AIMessage = await llm.ainvoke(msgs)
-    except:
-        pdb.set_trace()
+    resp: AIMessage = await llm.ainvoke(msgs)
     msgs.append(resp)
     code: Optional[str] = tag_extract(resp.content, "<code>", "</code>")
     if not code or max_rounds == 0:
         return Command(goto=END, update={}) 
     else:
-        #code = "\nprint(hahaha)\n" + code
         run_results: str = sandbox_run(code)
         failed: bool = exec_err(run_results)
         if failed:
             msgs.append(HumanMessage(
                 content="Something wrong when running the code: \n%s" % run_results
             ))
-            pdb.set_trace()
             return Command(
                 goto="agent_codeact", 
                 update={
@@ -163,7 +173,7 @@ async def agent_codeact(state: State) -> Command:
             )
         else:
             msgs.append(HumanMessage(content=run_results))
-            print(run_results)
+            LOGGER.info("CodeAct result: {}".format(run_results))
             return Command(
                 goto=END, 
                 update={
