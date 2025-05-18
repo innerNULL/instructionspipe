@@ -1,7 +1,8 @@
 {
   "in_data_path": "./bin/poc/tableqa/synthetic_data_vitals.jsonl",
-  "inputs_col": "vitals_note",
-  "query_task_col": "query_task",
+  "in_data_path": "synthetic_data_vitals.jsonl",
+  "in_text_col": "vitals_note",
+  "instruction_col": "query_task",
   "workspace": "./_workspace",
   "langchain": {
     "langsmith_tracing": true, 
@@ -13,7 +14,7 @@
     {
       "model": "gpt-4o-mini",
       "model_provider": "azure_openai",
-      "azure_endpoint": "",
+      "azure_endpoint": "", 
       "openai_api_version": "2024-08-01-preview",
       "openai_api_key": "",
       "max_retries": 3,
@@ -21,5 +22,8 @@
       "temperature": 0.01,
       "max_tokens": 16384
     }
-  ]
+  ],
+  "serving": {
+    "port": 6810
+  }
 }

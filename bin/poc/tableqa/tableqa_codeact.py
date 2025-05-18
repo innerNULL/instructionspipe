@@ -11,9 +11,13 @@ import io
 import tempfile
 import subprocess
 import uuid
+import uvicorn
 import logging
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Annotated, Literal, Callable, Union, Type, Any
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from requests.models import Response
 from langchain_core.messages import AIMessage
 from langchain_core.messages import AnyMessage
 from langchain_core.prompts import ChatPromptTemplate
@@ -76,6 +80,11 @@ class TableQaCodeActState(BaseModel):
 class State(BaseModel):
     llms: Dict[str, BaseChatModel] = {}
     tableqa_codeact: Optional[TableQaCodeActState] = None 
+
+
+class ReqTableQaCodeAct(BaseModel):
+    in_text: Dict[str, Any] | str
+    instruction: str
 
 
 def langchain_init(configs: Dict) -> None:
@@ -196,35 +205,90 @@ def agents_build(
     return graph
 
 
-async def main() -> None:
-    configs: Dict = json.loads(open(sys.argv[1], "r").read())
+async def tableqa_codeact_inf(
+    sample: Dict, 
+    llms: Dict[str, BaseChatModel],
+    in_text_col: str, 
+    instruction_col: str
+) -> State:
+    agents = agents_build()  
+    inputs: Dict = {
+        "llms": llms, 
+        "tableqa_codeact": {
+            "inputs": sample[in_text_col], 
+            "instruction": sample[instruction_col]
+        }
+    }
+    results: Dict = await agents.ainvoke(inputs)          
+    return results
+
+
+async def main_inf_offline() -> None:
+    configs: Dict = json.loads(open(sys.argv[2], "r").read())
     print(configs)
     llm_configs: Dict = configs["llms"] 
     in_data_path: str = configs["in_data_path"]
-    inputs_col: str = configs["inputs_col"]
-    instruction_col: str = configs["query_task_col"]
+    in_text_col: str = configs["in_text_col"]
+    instruction_col: str = configs["instruction_col"]
 
     langchain_init(configs["langchain"])
     llms: Dict[str, BaseChatModel] = {
         x["model"]: init_chat_model(**x) for x in llm_configs
     }
-    agents = agents_build()
     samples: List[Dict] = [
         json.loads(x) for x in open(in_data_path, "r").read().split("\n")
         if x not in {""}
     ]
     for sample in tqdm(samples):
-        inputs: Dict = {
-            "llms": llms, 
-            "tableqa_codeact": {
-                "inputs": sample[inputs_col], 
-                "instruction": sample[instruction_col]
-            }
-        }
-        await agents.ainvoke(inputs)
-        #pdb.set_trace()
+        results: Dict = await tableqa_codeact_inf(
+            sample, llms, in_text_col, instruction_col
+        )
     return
 
 
+def main_serving_http() -> None:
+    configs: Dict = json.loads(open(sys.argv[2], "r").read())
+    print(configs)
+    llm_configs: Dict = configs["llms"]             
+    langchain_init(configs["langchain"])
+    llms: Dict[str, BaseChatModel] = {
+        x["model"]: init_chat_model(**x) for x in llm_configs
+    }
+
+    app: FastAPI = FastAPI()
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"], 
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"]
+    )
+    app.state.vars = {}
+    app.state.vars["llms"] = llms
+
+    @app.post("/tableqa/codeact")
+    async def tableqa_codeact(req: ReqTableQaCodeAct) -> TableQaCodeActState:
+        sample: Dict = {
+            "in_text": req.in_text, 
+            "instruction": req.instruction
+        }
+        results: Dict = await tableqa_codeact_inf(
+            sample, 
+            app.state.vars["llms"],
+            "in_text",
+            "instruction"
+        )
+        return results["tableqa_codeact"]
+    
+    uvicorn.run(app, host="0.0.0.0", port=int(configs["serving"]["port"]))   
+    return 
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    scenario: str = sys.argv[1]
+    if scenario == "inf_offline":
+        asyncio.run(main_inf_offline())
+    elif scenario == "serving_http":
+        main_serving_http()
+    else:
+        raise "Wrong arguments"
