@@ -7,14 +7,14 @@
   "langchain": {
     "langsmith_tracing": true, 
     "langsmith_endpoint": "https://api.smith.langchain.com",
-    "langsmith_api_key": "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",
+    "langsmith_api_key": "",
     "langsmith_project": "instructionspipe-poc-tabelqa_codeact-v2025.05.16.2230"
   },
   "llms": [
     {
       "model": "gpt-4o-mini",
       "model_provider": "azure_openai",
-      "azure_endpoint": "",
+      "azure_endpoint": "", 
       "openai_api_version": "2024-08-01-preview",
       "openai_api_key": "",
       "max_retries": 3,
@@ -22,5 +22,8 @@
       "temperature": 0.01,
       "max_tokens": 16384
     }
-  ]
+  ],
+  "serving": {
+    "port": 6810
+  }
 }

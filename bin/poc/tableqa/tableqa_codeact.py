@@ -11,9 +11,13 @@ import io
 import tempfile
 import subprocess
 import uuid
+import uvicorn
 import logging
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Annotated, Literal, Callable, Union, Type, Any
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from requests.models import Response
 from langchain_core.messages import AIMessage
 from langchain_core.messages import AnyMessage
 from langchain_core.prompts import ChatPromptTemplate
@@ -76,6 +80,11 @@ class TableQaCodeActState(BaseModel):
 class State(BaseModel):
     llms: Dict[str, BaseChatModel] = {}
     tableqa_codeact: Optional[TableQaCodeActState] = None 
+
+
+class ReqTableQaCodeAct(BaseModel):
+    in_text: Dict[str, Any] | str
+    instruction: str
 
 
 def langchain_init(configs: Dict) -> None:
@@ -237,8 +246,42 @@ async def main_inf_offline() -> None:
     return
 
 
-async def serving_http() -> None:
-    return
+def main_serving_http() -> None:
+    configs: Dict = json.loads(open(sys.argv[2], "r").read())
+    print(configs)
+    llm_configs: Dict = configs["llms"]             
+    langchain_init(configs["langchain"])
+    llms: Dict[str, BaseChatModel] = {
+        x["model"]: init_chat_model(**x) for x in llm_configs
+    }
+
+    app: FastAPI = FastAPI()
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"], 
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"]
+    )
+    app.state.vars = {}
+    app.state.vars["llms"] = llms
+
+    @app.post("/tableqa/codeact")
+    async def tableqa_codeact(req: ReqTableQaCodeAct) -> TableQaCodeActState:
+        sample: Dict = {
+            "in_text": req.in_text, 
+            "instruction": req.instruction
+        }
+        results: Dict = await tableqa_codeact_inf(
+            sample, 
+            app.state.vars["llms"],
+            "in_text",
+            "instruction"
+        )
+        return results["tableqa_codeact"]
+    
+    uvicorn.run(app, host="0.0.0.0", port=int(configs["serving"]["port"]))   
+    return 
 
 
 if __name__ == "__main__":
@@ -246,6 +289,6 @@ if __name__ == "__main__":
     if scenario == "inf_offline":
         asyncio.run(main_inf_offline())
     elif scenario == "serving_http":
-        asyncio.run(main_serving_http())              
+        main_serving_http()
     else:
-        raise "Woring arguments"
+        raise "Wrong arguments"
