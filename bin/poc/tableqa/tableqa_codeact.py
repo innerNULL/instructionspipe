@@ -196,7 +196,7 @@ def agents_build(
     return graph
 
 
-async def main() -> None:
+async def main_inf_offline() -> None:
     configs: Dict = json.loads(open(sys.argv[1], "r").read())
     print(configs)
     llm_configs: Dict = configs["llms"] 
@@ -221,10 +221,9 @@ async def main() -> None:
                 "instruction": sample[instruction_col]
             }
         }
-        await agents.ainvoke(inputs)
-        #pdb.set_trace()
+        results: Dict = await agents.ainvoke(inputs)
     return
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(main_inf_offline())
