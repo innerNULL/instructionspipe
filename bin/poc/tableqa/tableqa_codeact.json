@@ -1,12 +1,13 @@
 {
   "in_data_path": "./bin/poc/tableqa/synthetic_data_vitals.jsonl",
-  "inputs_col": "vitals_note",
-  "query_task_col": "query_task",
+  "in_data_path": "synthetic_data_vitals.jsonl",
+  "in_text_col": "vitals_note",
+  "instruction_col": "query_task",
   "workspace": "./_workspace",
   "langchain": {
     "langsmith_tracing": true, 
     "langsmith_endpoint": "https://api.smith.langchain.com",
-    "langsmith_api_key": "",
+    "langsmith_api_key": "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",
     "langsmith_project": "instructionspipe-poc-tabelqa_codeact-v2025.05.16.2230"
   },
   "llms": [

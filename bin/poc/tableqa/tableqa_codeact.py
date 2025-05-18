@@ -196,32 +196,44 @@ def agents_build(
     return graph
 
 
+async def tableqa_codeact_inf(
+    sample: Dict, 
+    llms: Dict[str, BaseChatModel],
+    in_text_col: str, 
+    instruction_col: str
+) -> State:
+    agents = agents_build()  
+    inputs: Dict = {
+        "llms": llms, 
+        "tableqa_codeact": {
+            "inputs": sample[in_text_col], 
+            "instruction": sample[instruction_col]
+        }
+    }
+    results: Dict = await agents.ainvoke(inputs)          
+    return results
+
+
 async def main_inf_offline() -> None:
     configs: Dict = json.loads(open(sys.argv[2], "r").read())
     print(configs)
     llm_configs: Dict = configs["llms"] 
     in_data_path: str = configs["in_data_path"]
-    inputs_col: str = configs["inputs_col"]
-    instruction_col: str = configs["query_task_col"]
+    in_text_col: str = configs["in_text_col"]
+    instruction_col: str = configs["instruction_col"]
 
     langchain_init(configs["langchain"])
     llms: Dict[str, BaseChatModel] = {
         x["model"]: init_chat_model(**x) for x in llm_configs
     }
-    agents = agents_build()
     samples: List[Dict] = [
         json.loads(x) for x in open(in_data_path, "r").read().split("\n")
         if x not in {""}
     ]
     for sample in tqdm(samples):
-        inputs: Dict = {
-            "llms": llms, 
-            "tableqa_codeact": {
-                "inputs": sample[inputs_col], 
-                "instruction": sample[instruction_col]
-            }
-        }
-        results: Dict = await agents.ainvoke(inputs)
+        results: Dict = await tableqa_codeact_inf(
+            sample, llms, in_text_col, instruction_col
+        )
     return
 
 
