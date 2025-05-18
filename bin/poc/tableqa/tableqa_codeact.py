@@ -197,7 +197,7 @@ def agents_build(
 
 
 async def main_inf_offline() -> None:
-    configs: Dict = json.loads(open(sys.argv[1], "r").read())
+    configs: Dict = json.loads(open(sys.argv[2], "r").read())
     print(configs)
     llm_configs: Dict = configs["llms"] 
     in_data_path: str = configs["in_data_path"]
@@ -225,5 +225,15 @@ async def main_inf_offline() -> None:
     return
 
 
+async def serving_http() -> None:
+    return
+
+
 if __name__ == "__main__":
-    asyncio.run(main_inf_offline())
+    scenario: str = sys.argv[1]
+    if scenario == "inf_offline":
+        asyncio.run(main_inf_offline())
+    elif scenario == "serving_http":
+        asyncio.run(main_serving_http())              
+    else:
+        raise "Woring arguments"
