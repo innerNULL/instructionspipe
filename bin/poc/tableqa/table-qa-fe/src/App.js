@@ -1,6 +1,8 @@
 // App.js
 // Prompt
 // https://g.co/gemini/share/728ad3025014
+//
+// PORT=18088 npm start
 
 import React, { useState } from 'react';
 import './App.css';

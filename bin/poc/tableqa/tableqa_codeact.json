@@ -14,7 +14,7 @@
     {
       "model": "gpt-4o-mini",
       "model_provider": "azure_openai",
-      "azure_endpoint": "", 
+      "azure_endpoint": "",
       "openai_api_version": "2024-08-01-preview",
       "openai_api_key": "",
       "max_retries": 3,
@@ -24,6 +24,6 @@
     }
   ],
   "serving": {
-    "port": 6810
+    "port": 8910
   }
 }
