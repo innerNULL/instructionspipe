@@ -106,7 +106,7 @@ def tag_extract(
         if tag_start not in text or tag_end not in text:
             continue
         start_idx: int = text.index(tag_start) + len(tag_start)
-        end_idx: int = text.index(tag_end)
+        end_idx: int = text.rindex(tag_end)
         if start_idx >= end_idx:
             continue
         else:
