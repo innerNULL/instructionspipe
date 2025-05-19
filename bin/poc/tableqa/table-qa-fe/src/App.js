@@ -1,6 +1,6 @@
 // App.js
 // Prompt
-// https://g.co/gemini/share/728ad3025014
+// https://chatgpt.com/share/682ac8e1-941c-800d-a2e1-9dcdd6cbedec
 //
 // PORT=18088 npm start
 
@@ -36,7 +36,9 @@ export default function App() {
         data.msgs && data.msgs.length > 0
           ? data.msgs[data.msgs.length - 1].content
           : '';
-      setOutput(lastMsg);
+      setOutput(lastMsg);      
+      const code = data.code;
+      setCode(code);
     } catch (err) {
       console.error(err);
       setOutput('Error: ' + err.message);
@@ -76,6 +78,8 @@ export default function App() {
       <div className="panel output-panel">
         <h2>Output</h2>
         <pre>{output}</pre>
+        <h2>Code</h2>
+        <pre>{code}</pre>           
       </div>
     </div>
   );

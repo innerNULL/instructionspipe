@@ -14,7 +14,7 @@ import uuid
 import uvicorn
 import logging
 from pydantic import BaseModel
-from typing import Dict, List, Optional, Annotated, Literal, Callable, Union, Type, Any
+from typing import Dict, List, Optional, Annotated, Literal, Callable, Union, Type, Any, Tuple
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from requests.models import Response
@@ -74,6 +74,7 @@ class TableQaCodeActState(BaseModel):
     instruction: Optional[str] = None
     prompt_sys: str = PROMPT_SYS 
     msgs: List[AnyMessage] = []
+    code: Optional[str] = None
     max_rounds: int = 5
 
 
@@ -94,15 +95,24 @@ def langchain_init(configs: Dict) -> None:
     os.environ["LANGSMITH_PROJECT"] = configs["langsmith_project"]
 
 
-def tag_extract(text: str, tag_start: str, tag_end: str) -> Optional[str]:
+def tag_extract(
+    text: str, 
+    start_end_tags: List[Tuple[str, str]]
+) -> Optional[str]:
     out: Optional[str] = None
-    if tag_start not in text or tag_end not in text:
-        return out
-    start_idx: int = text.index(tag_start) + len(tag_start)
-    end_idx: int = text.index(tag_end)
-    if start_idx >= end_idx:
-        return out
-    return text[start_idx:end_idx]
+    for start_end_tag in start_end_tags:
+        tag_start: str = start_end_tag[0]
+        tag_end: str = start_end_tag[1]
+        if tag_start not in text or tag_end not in text:
+            continue
+        start_idx: int = text.index(tag_start) + len(tag_start)
+        end_idx: int = text.index(tag_end)
+        if start_idx >= end_idx:
+            continue
+        else:
+            out = text[start_idx:end_idx]    
+            break
+    return out
 
 
 def exec_err(outputs: str) -> bool:
@@ -161,9 +171,17 @@ async def agent_codeact(state: State) -> Command:
         ))
     resp: AIMessage = await llm.ainvoke(msgs)
     msgs.append(resp)
-    code: Optional[str] = tag_extract(resp.content, "<code>", "</code>")
+    code: Optional[str] = tag_extract(resp.content, [("<code>", "</code>"), ("```python", "```")])
     if not code or max_rounds == 0:
-        return Command(goto=END, update={}) 
+        return Command(
+            goto=END, 
+            update={
+                "tableqa_codeact": {
+                    "msgs": msgs,    
+                    "max_rounds": max_rounds - 1          
+                }
+            }
+        ) 
     else:
         run_results: str = sandbox_run(code)
         failed: bool = exec_err(run_results)
@@ -176,7 +194,8 @@ async def agent_codeact(state: State) -> Command:
                 update={
                     "tableqa_codeact": {
                         "msgs": msgs,
-                        "max_rounds": max_rounds - 1
+                        "max_rounds": max_rounds - 1, 
+                        "code": code
                     }
                 }
             )
@@ -188,7 +207,8 @@ async def agent_codeact(state: State) -> Command:
                 update={
                     "tableqa_codeact": {
                        "msgs": msgs,
-                       "max_rounds": max_rounds - 1   
+                       "max_rounds": max_rounds - 1,
+                       "code": code
                     }
                 }
             )    
