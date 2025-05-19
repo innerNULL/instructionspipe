@@ -1,74 +1,80 @@
-import React, { useState } from "react";
-import { EventSourcePolyfill } from "event-source-polyfill";
+// App.js
+// Prompt
+// https://g.co/gemini/share/728ad3025014
 
-const App = () => {
-  const [inputText, setInputText] = useState("");
-  const [instruction, setInstruction] = useState("");
-  const [response, setResponse] = useState("");
+import React, { useState } from 'react';
+import './App.css';
 
-  const handleSubmit = () => {
-    const url = "https://your-llm-api-endpoint.com"; // Replace with your API URL
-    const eventSource = new EventSourcePolyfill(url, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ input_text: inputText, instruction }),
-      method: "POST",
-    });
+export default function App() {
+  const [inText, setInText] = useState('');
+  const [instruction, setInstruction] = useState('');
+  const [output, setOutput] = useState('');
+  const [code, setCode] = useState('');      
+  const [loading, setLoading] = useState(false);
+  const endpoint = 'https://037e184c5f2a.ngrok.app/tableqa/codeact';
 
-    setResponse(""); // Clear previous response
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      const payload = {
+        in_text: tryParseJSON(inText),
+        instruction,
+      };
+      const response = await fetch(
+        endpoint, 
+        {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json',},
+          body: JSON.stringify(payload),
+        }
+      );
+      const data = await response.json();
+      console.log(data);
+      const lastMsg =
+        data.msgs && data.msgs.length > 0
+          ? data.msgs[data.msgs.length - 1].content
+          : '';
+      setOutput(lastMsg);
+    } catch (err) {
+      console.error(err);
+      setOutput('Error: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    eventSource.onmessage = (event) => {
-      setResponse((prev) => prev + event.data);
-    };
-
-    eventSource.onerror = () => {
-      eventSource.close();
-      console.error("Error with EventSource.");
-    };
+  const tryParseJSON = (str) => {
+    try {
+      return JSON.parse(str);
+    } catch {
+      return str;
+    }
   };
 
   return (
-    <div style={{ display: "flex", height: "100vh" }}>
-      <div style={{ flex: 1, padding: "1rem", borderRight: "1px solid #ccc" }}>
-        <h3>LLM Input</h3>
-        <div>
-          <label>Input Text:</label>
-          <textarea
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            style={{ width: "100%", height: "100px" }}
-          />
-        </div>
-        <div>
-          <label>Instruction:</label>
-          <textarea
-            value={instruction}
-            onChange={(e) => setInstruction(e.target.value)}
-            style={{ width: "100%", height: "100px" }}
-          />
-        </div>
-        <button onClick={handleSubmit} style={{ marginTop: "1rem" }}>
-          Submit
+    <div className="app-container">
+      <div className="panel input-panel">
+        <h2>Input</h2>
+        <textarea
+          value={inText}
+          onChange={(e) => setInText(e.target.value)}
+          placeholder="Enter in_text (JSON or string)"
+        />
+        <input
+          type="text"
+          value={instruction}
+          onChange={(e) => setInstruction(e.target.value)}
+          placeholder="Enter instruction"
+        />
+        <button onClick={handleSubmit} disabled={loading}>
+          {loading ? 'Loading...' : 'Submit'}
         </button>
       </div>
-      <div style={{ flex: 2, padding: "1rem" }}>
-        <h3>LLM Output</h3>
-        <div
-          style={{
-            width: "100%",
-            height: "calc(100% - 2rem)",
-            border: "1px solid #ccc",
-            padding: "1rem",
-            overflowY: "auto",
-          }}
-        >
-          {response}
-        </div>
+
+      <div className="panel output-panel">
+        <h2>Output</h2>
+        <pre>{output}</pre>
       </div>
     </div>
   );
-};
-
-export default App;
-
+}
