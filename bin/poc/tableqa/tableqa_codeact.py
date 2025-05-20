@@ -87,6 +87,7 @@ class State(BaseModel):
 class ReqTableQaCodeAct(BaseModel):
     in_text: Dict[str, Any] | str
     instruction: str
+    llm: str
 
 
 def langchain_init(configs: Dict) -> None:
@@ -187,7 +188,7 @@ async def agent_codeact(state: State) -> Command:
         run_results: str = sandbox_run(code)
         failed: bool = exec_err(run_results)
         if failed:
-            LOGGER.warning("Failed running code in sandbox.")  
+            LOGGER.warning("Failed running code in sandbox, %i rounds left." % (max_rounds - 1)) 
             LOGGER.warning("Err msg: \n%s" % run_results)
             msgs.append(HumanMessage(
                 content="Something wrong when running the code: \n%s" % run_results
@@ -292,6 +293,10 @@ def main_serving_http() -> None:
     app.state.vars = {}
     app.state.vars["llms"] = llms
     app.state.vars["configs"] = configs
+    
+    @app.get("/get_models")
+    async def get_models() -> List[str]:
+        return [x for x in llms.keys()]
 
     @app.post("/tableqa/codeact")
     async def tableqa_codeact(req: ReqTableQaCodeAct) -> TableQaCodeActState:
@@ -301,7 +306,8 @@ def main_serving_http() -> None:
         }
         results: Dict = await tableqa_codeact_inf(
             sample,
-            app.state.vars["configs"]["default_model"],
+            #app.state.vars["configs"]["default_model"],
+            req.llm,
             app.state.vars["llms"],
             "in_text",
             "instruction"
