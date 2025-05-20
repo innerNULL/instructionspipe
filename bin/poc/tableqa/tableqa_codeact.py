@@ -1,6 +1,18 @@
 # -*- coding: utf-8 -*-
 # file: tableqa.py
 # date: 2025-05-16
+"""
+Usage:
+Run offline inference:
+```shell
+python tableqa_codeact.py inf_offline tableqa_codeact.json
+```
+Start HTTP serving:
+```shell
+python tableqa_codeact.py serving_http tableqa_codeact.json
+```
+"""
+
 
 import os
 import sys
@@ -30,6 +42,7 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.pregel.io import AddableValuesDict
 from langgraph.types import Command
 from langchain_core.caches import InMemoryCache
+from langchain_core.messages.utils import convert_to_openai_messages
 from langgraph.graph.message import add_messages
 from langchain.chat_models import init_chat_model
 from langchain_core.globals import set_llm_cache
@@ -257,10 +270,11 @@ async def main_inf_offline() -> None:
     configs: Dict = json.loads(open(sys.argv[2], "r").read())
     print(configs)
     llm_configs: Dict = configs["llms"] 
-    in_data_path: str = configs["in_data_path"]
-    in_text_col: str = configs["in_text_col"]
-    instruction_col: str = configs["instruction_col"]
-    default_model: str = configs["default_model"]
+    in_data_path: str = configs["inf_offline"]["in_data_path"]
+    out_data_path: str = configs["inf_offline"]["out_data_path"]    
+    in_text_col: str = configs["inf_offline"]["in_text_col"]
+    instruction_col: str = configs["inf_offline"]["instruction_col"]
+    model: str = configs["inf_offline"]["model"]
 
     langchain_init(configs["langchain"])
     llms: Dict[str, BaseChatModel] = {
@@ -270,10 +284,16 @@ async def main_inf_offline() -> None:
         json.loads(x) for x in open(in_data_path, "r").read().split("\n")
         if x not in {""}
     ]
+    out_file = open(out_data_path, "w")
     for sample in tqdm(samples):
         results: Dict = await tableqa_codeact_inf(
-            sample, default_model, llms, in_text_col, instruction_col
+            sample, model, llms, in_text_col, instruction_col
         )
+        out: Dict = results["tableqa_codeact"]
+        out["msgs"] = [convert_to_openai_messages(x) for x in out["msgs"]]
+        out_file.write(json.dumps(out) + "\n")
+    out_file.close()
+    LOGGER.info("Dumped the results to %s" % out_data_path)
     return
 
 
@@ -310,7 +330,6 @@ def main_serving_http() -> None:
         }
         results: Dict = await tableqa_codeact_inf(
             sample,
-            #app.state.vars["configs"]["default_model"],
             req.llm,
             app.state.vars["llms"],
             "in_text",
@@ -318,7 +337,7 @@ def main_serving_http() -> None:
         )
         return results["tableqa_codeact"]
     
-    uvicorn.run(app, host="0.0.0.0", port=int(configs["serving"]["port"]))   
+    uvicorn.run(app, host="0.0.0.0", port=int(configs["serving_http"]["port"]))   
     return 
 
 
