@@ -187,6 +187,8 @@ async def agent_codeact(state: State) -> Command:
         run_results: str = sandbox_run(code)
         failed: bool = exec_err(run_results)
         if failed:
+            LOGGER.warning("Failed running code in sandbox.")  
+            LOGGER.warning("Err msg: \n%s" % run_results)
             msgs.append(HumanMessage(
                 content="Something wrong when running the code: \n%s" % run_results
             ))
