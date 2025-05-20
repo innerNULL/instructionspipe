@@ -29,8 +29,10 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.pregel.io import AddableValuesDict
 from langgraph.types import Command
+from langchain_core.caches import InMemoryCache
 from langgraph.graph.message import add_messages
 from langchain.chat_models import init_chat_model
+from langchain_core.globals import set_llm_cache
 from tqdm import tqdm
 
 logging.basicConfig(
@@ -95,6 +97,8 @@ def langchain_init(configs: Dict) -> None:
     os.environ["LANGSMITH_ENDPOINT"] = configs["langsmith_endpoint"]
     os.environ["LANGSMITH_API_KEY"] = configs["langsmith_api_key"]
     os.environ["LANGSMITH_PROJECT"] = configs["langsmith_project"]
+    set_llm_cache(InMemoryCache())
+    logging.getLogger("langchain.cache").setLevel(logging.DEBUG)
 
 
 def tag_extract(
