@@ -122,7 +122,7 @@ def tag_extract(
 
 
 def exec_err(outputs: str) -> bool:
-    if outputs[:9] == "Traceback":
+    if "Traceback" in outputs:
         return True
     return False
 
