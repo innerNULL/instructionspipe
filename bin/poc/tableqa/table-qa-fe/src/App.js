@@ -79,9 +79,9 @@ export default function App() {
   return (
     <div className="app-container">
       <div className="panel input-panel">
-        <h2>Input</h2>
+        <h2>Model Selection</h2>
         {/* Model Dropdown */}
-        <label htmlFor="model-select">Model:</label>
+        <label htmlFor="model-select">Supported LLMs:</label>
         <select
           id="model-select"
           value={selectedModel}
@@ -93,6 +93,7 @@ export default function App() {
             </option>
           ))}
         </select>
+        <h2>Input</h2>        
         <textarea
           value={inText}
           onChange={(e) => setInText(e.target.value)}
