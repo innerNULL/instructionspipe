@@ -1,11 +1,20 @@
 // App.js
 // Prompt
+// Initial implementation generation:
 // https://chatgpt.com/share/682ac8e1-941c-800d-a2e1-9dcdd6cbedec
+// Support model selection via dropdown menu"
 // https://chatgpt.com/share/682c2e64-04d0-800d-b736-67363d5924f1
+// Add markdown rendering:
+// https://chatgpt.com/canvas/shared/682c3c0767888191bb5a0834815cdb82
 //
-// PORT=18088 npm start
+// PORT=18088 npm start --verbose
 
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight'; // for syntax highlighting
+import 'highlight.js/styles/github.css';      // choose a style or customize
+
 import './App.css';
 
 export default function App() {
@@ -112,9 +121,17 @@ export default function App() {
 
       <div className="panel output-panel">
         <h2>Output</h2>
-        <pre>{output}</pre>
+        <div className="markdown-output">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {output}
+          </ReactMarkdown>
+        </div>
         <h2>Code</h2>
-        <pre>{code}</pre>           
+        <div className="markdown-output">
+          <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+            {code === '' ? '' : `\`\`\`python${code}\`\`\``}
+          </ReactMarkdown>
+        </div>
       </div>
     </div>
   );
