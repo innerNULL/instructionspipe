@@ -1,16 +1,10 @@
 {
-  "in_data_path": "./bin/poc/tableqa/synthetic_data_vitals.jsonl",
-  "in_data_path": "synthetic_data_vitals.jsonl",
-  "in_text_col": "vitals_note",
-  "instruction_col": "query_task",
-  "workspace": "./_workspace",
   "langchain": {
     "langsmith_tracing": true, 
     "langsmith_endpoint": "https://api.smith.langchain.com",
     "langsmith_api_key": "",
     "langsmith_project": "instructionspipe-poc-tabelqa_codeact-v2025.05.16.2230"
   },
-  "default_model": "gpt-4o-mini", 
   "llms": [
     {
       "model": "gpt-4o-mini",
@@ -24,7 +18,7 @@
       "max_tokens": 16384
     },
     {
-      "model": "unsloth/Qwen2.5-Coder-7B-bnb-4bit",
+      "model": "unsloth/Llama-3.2-3B-Instruct-unsloth-bnb-4bit",
       "model_provider": "openai",
       "base_url": "http://0.0.0.0:6789/v1/",
       "api_key": "null",
@@ -34,7 +28,14 @@
       "max_tokens": 5000          
     }
   ],
-  "serving": {
+  "inf_offline": {
+    "in_data_path": "synthetic_data_vitals.jsonl",
+    "out_data_path": "synthetic_data_vitals.jsonl.state.jsonl",
+    "in_text_col": "vitals_note",      
+    "instruction_col": "query_task",  
+    "model": "gpt-4o-mini" 
+  },
+  "serving_http": {
     "port": 8910
   }
 }

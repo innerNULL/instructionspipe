@@ -16,7 +16,7 @@ function build() {
   cd ${CURR_DIR}
   cd ${WORKSPACE}
   ${PYTHON} -m venv ./_pyenv --copies
-  ./_pyenv/bin/pip install vllm==${VLLM_VERSION} bitsandbytes hf-xet flash-attn
+  ./_pyenv/bin/pip install vllm==${VLLM_VERSION} bitsandbytes hf-xet
 }
 
 
@@ -24,8 +24,8 @@ function start() {
   cd ${CURR_DIR}
   cd ${WORKSPACE}
   ./_pyenv/bin/huggingface-cli login --token ${HF_TOKEN}
-  #CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} \
-  #VLLM_ALLOW_LONG_MAX_MODEL_LEN=${VLLM_ALLOW_LONG_MAX_MODEL_LEN} \
+  export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} \
+  export VLLM_ALLOW_LONG_MAX_MODEL_LEN=${VLLM_ALLOW_LONG_MAX_MODEL_LEN} \
   #./_pyenv/bin/vllm serve ${MODEL} \
   #  --tokenizer ${TOKENIZER} \
   #  --dtype ${DTYPE} \
@@ -37,9 +37,7 @@ function start() {
   #  --enable-lora \
   #  --max_lora_rank ${MAX_LORA_RANK} \
   #  --lora-modules "{\"name\": \"${ADAPTER_NAME}\", \"path\": \"${ADAPTER_CKPT}\", \"base_model_name\": \"${ADAPTER_BASEMODEL}\"}"
-  command="CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}"
-  command="${command} VLLM_ALLOW_LONG_MAX_MODEL_LEN=${VLLM_ALLOW_LONG_MAX_MODEL_LEN}"
-  command="${command} ./_pyenv/bin/vllm serve"
+  command="./_pyenv/bin/vllm serve"
   command="${command} ${MODEL}"
   command="${command} --tokenizer ${TOKENIZER}"
   command="${command} --dtype ${DTYPE}"
@@ -55,7 +53,7 @@ function start() {
       command="${command} --lora-modules ${lora_module}"          
   fi
   echo ${command}
-  bash -c "${command}"
+  ${command}
 }
 
 
