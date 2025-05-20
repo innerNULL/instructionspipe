@@ -76,6 +76,7 @@ class TableQaCodeActState(BaseModel):
     msgs: List[AnyMessage] = []
     code: Optional[str] = None
     max_rounds: int = 5
+    model: str = "gpt-4o-mini"
 
 
 class State(BaseModel):
@@ -86,6 +87,7 @@ class State(BaseModel):
 class ReqTableQaCodeAct(BaseModel):
     in_text: Dict[str, Any] | str
     instruction: str
+    llm: str
 
 
 def langchain_init(configs: Dict) -> None:
@@ -106,7 +108,7 @@ def tag_extract(
         if tag_start not in text or tag_end not in text:
             continue
         start_idx: int = text.index(tag_start) + len(tag_start)
-        end_idx: int = text.rindex(tag_end)
+        end_idx: int = text.index(tag_end, start_idx + 1)
         if start_idx >= end_idx:
             continue
         else:
@@ -155,7 +157,7 @@ def sandbox_run(code: str, workspace_dir: Optional[str] = None) -> str:
 
 async def agent_codeact(state: State) -> Command:
     curr_state: TableQaCodeActState = state.tableqa_codeact
-    llm: BaseChatModel = state.llms["gpt-4o-mini"]
+    llm: BaseChatModel = state.llms[curr_state.model]
     msgs: List[AnyMessage] = curr_state.msgs
     sys_prompt: str = curr_state.prompt_sys
     inputs: Dict = curr_state.inputs
@@ -186,6 +188,8 @@ async def agent_codeact(state: State) -> Command:
         run_results: str = sandbox_run(code)
         failed: bool = exec_err(run_results)
         if failed:
+            LOGGER.warning("Failed running code in sandbox, %i rounds left." % (max_rounds - 1)) 
+            LOGGER.warning("Err msg: \n%s" % run_results)
             msgs.append(HumanMessage(
                 content="Something wrong when running the code: \n%s" % run_results
             ))
@@ -226,7 +230,8 @@ def agents_build(
 
 
 async def tableqa_codeact_inf(
-    sample: Dict, 
+    sample: Dict,
+    model: str, 
     llms: Dict[str, BaseChatModel],
     in_text_col: str, 
     instruction_col: str
@@ -236,7 +241,8 @@ async def tableqa_codeact_inf(
         "llms": llms, 
         "tableqa_codeact": {
             "inputs": sample[in_text_col], 
-            "instruction": sample[instruction_col]
+            "instruction": sample[instruction_col],
+            "model": model
         }
     }
     results: Dict = await agents.ainvoke(inputs)          
@@ -250,6 +256,7 @@ async def main_inf_offline() -> None:
     in_data_path: str = configs["in_data_path"]
     in_text_col: str = configs["in_text_col"]
     instruction_col: str = configs["instruction_col"]
+    default_model: str = configs["default_model"]
 
     langchain_init(configs["langchain"])
     llms: Dict[str, BaseChatModel] = {
@@ -261,7 +268,7 @@ async def main_inf_offline() -> None:
     ]
     for sample in tqdm(samples):
         results: Dict = await tableqa_codeact_inf(
-            sample, llms, in_text_col, instruction_col
+            sample, default_model, llms, in_text_col, instruction_col
         )
     return
 
@@ -285,6 +292,11 @@ def main_serving_http() -> None:
     )
     app.state.vars = {}
     app.state.vars["llms"] = llms
+    app.state.vars["configs"] = configs
+    
+    @app.get("/get_models")
+    async def get_models() -> List[str]:
+        return [x for x in llms.keys()]
 
     @app.post("/tableqa/codeact")
     async def tableqa_codeact(req: ReqTableQaCodeAct) -> TableQaCodeActState:
@@ -293,7 +305,9 @@ def main_serving_http() -> None:
             "instruction": req.instruction
         }
         results: Dict = await tableqa_codeact_inf(
-            sample, 
+            sample,
+            #app.state.vars["configs"]["default_model"],
+            req.llm,
             app.state.vars["llms"],
             "in_text",
             "instruction"
