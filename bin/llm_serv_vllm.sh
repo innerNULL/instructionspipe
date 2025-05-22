@@ -47,6 +47,8 @@ function start() {
   command="${command} --gpu-memory-utilization ${GPU_MEM_UTILIZATION}"     
   command="${command} --port ${PORT}"  
   command="${command} --enable-prefix-caching"
+  gen_conf="{\"max_new_tokens\":${MAX_NEW_TOKENS}}"
+  command="${command} --override-generation-config ${gen_conf}"
   if [[ -n "${ADAPTER_NAME}" && -n "${ADAPTER_CKPT}" ]]; then
       command="${command} --enable-lora"     
       command="${command} --max_lora_rank ${MAX_LORA_RANK}"  
