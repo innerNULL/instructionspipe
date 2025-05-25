@@ -2,6 +2,21 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Introduction
+Project initializaion:
+```shell
+sudo apt install npm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.4/install.sh | bash
+nvm install 23
+nvm use 23
+npx create-react-app $(pwd)/table-qa-fe
+```
+
+Run:
+```shell
+PORT=18088 npm start
+```
+
 ## Available Scripts
 
 In the project directory, you can run:
