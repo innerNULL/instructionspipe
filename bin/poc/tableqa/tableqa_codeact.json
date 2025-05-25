@@ -9,9 +9,9 @@
     {
       "model": "gpt-4o-mini",
       "model_provider": "azure_openai",
-      "azure_endpoint": "",
+      "azure_endpoint": "https://ai-caahub503407275946.openai.azure.com/",
       "openai_api_version": "2024-08-01-preview",
-      "openai_api_key": "",
+      "openai_api_key": "FGjYBBAN2IX9IO4m7sIwS6hPvW37rhpXOYqHHVNbl5WjW9S4ax9fJQQJ99BCACYeBjFXJ3w3AAAAACOGVwfH",
       "max_retries": 3,
       "timeout": 300,
       "temperature": 0.01,

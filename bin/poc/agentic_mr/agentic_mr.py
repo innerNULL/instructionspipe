@@ -73,12 +73,28 @@ class AgentMeta(BaseModel):
     name: str
     state: Type
     runner: Callable
+    configs: Optional[Dict] = None         
+
+def merge_dicts(
+    a: Dict[str, Dict[str, BaseModel]], 
+    b: Dict[str, Dict[str, BaseModel]]
+) -> Dict[str, Dict[str, BaseModel]]:
+    if a is None:
+        return b
+    result = a.copy()
+    for key, value in b.items():
+        if key in result:
+            result[key].update(value)
+        else:
+            result[key] = value
+    return result
 
 
 class State(BaseModel):
     llms: Optional[Dict[str, BaseChatModel]] = None
     instructions: Optional[List[Instruction]] = None
-    states: Optional[Dict[str, Dict[str, BaseModel]]] = None
+    #states: Optional[Dict[str, Dict[str, BaseModel]]] = None
+    states: Annotated[Optional[Dict[str, Dict[str, BaseModel]]], merge_dicts] = None
     agents_meta: Optional[Dict[str, AgentMeta]] = None
 
 
@@ -143,25 +159,85 @@ def agents_build(
 
 
 class DemoContentGenState(BaseModel):
-    msgs: Dict[str, List[AnyMessage]] = {}
+    msgs: List[AnyMessage] = []
     results: Dict[str, str] = {}
-    task_name_buffer: Optional[str] = None
 
 
 class DemoBasicMathState(BaseModel):
-    msgs: Dict[str, List[AnyMessage]] = {}                
+    msgs: List[AnyMessage] = []               
     results: Dict[str, str] = {}   
-    task_name_buffer: Optional[str] = None              
 
 
-def demo_agent_content_gen(state: RouterState) -> Dict:
+async def demo_agent_content_gen(state: RouterState) -> Dict:
     print("Run content gen agent")
-    return {}
+    name: str = state["name"]
+    task: str = state["task"]
+    global_state: State = state["state"]
+    instruction: Instruction = [
+        x for x in global_state.instructions if x.name == name
+    ][0]
+    agent_meta: BaseModel = global_state.agents_meta[task]
+    agent_state_cls: Type = agent_meta.state
+    out_msg: Dict = {
+        "states": {
+            task: {
+                name: agent_state_cls()     
+            }
+        }
+    }
+    dest: agent_state_cls = out_msg["states"][task][name]
+    agent_conf: Dict = agent_meta.configs 
+    
+    llm: BaseChatModel = global_state.llms[agent_conf["llm"]]
+    msgs: List[Dict] = []
+    sys_prompt: SystemMessage = SystemMessage(
+        "You need generate the content following given instruction."
+    )
+    user_prompt: HumanMessage = HumanMessage(
+        content=instruction.content
+    )
+    msgs.append(sys_prompt)
+    msgs.append(user_prompt)
+    resp: AIMessage = await llm.ainvoke(msgs)
+    dest.msgs = msgs
+    dest.results["final"] = resp.content
+    return out_msg
 
 
-def demo_agent_basic_math(state: RouterState) -> Dict:
+async def demo_agent_basic_math(state: RouterState) -> Dict:
     print("Run basic math agent")
-    return {}
+    name: str = state["name"]
+    task: str = state["task"]
+    global_state: State = state["state"]
+    instruction: Instruction = [
+        x for x in global_state.instructions if x.name == name
+    ][0]
+    agent_meta: BaseModel = global_state.agents_meta[task]
+    agent_state_cls: Type = agent_meta.state
+    out_msg: Dict = {
+        "states": {
+            task: {
+                name: agent_state_cls()     
+            }
+        }
+    }
+    dest: agent_state_cls = out_msg["states"][task][name]
+    agent_conf: Dict = agent_meta.configs 
+    
+    llm: BaseChatModel = global_state.llms[agent_conf["llm"]]
+    msgs: List[Dict] = []
+    sys_prompt: SystemMessage = SystemMessage(
+        "You need generate the content following given instruction."
+    )
+    user_prompt: HumanMessage = HumanMessage(
+        content=instruction.content
+    )
+    msgs.append(sys_prompt)
+    msgs.append(user_prompt)
+    resp: AIMessage = await llm.ainvoke(msgs)
+    dest.msgs = msgs
+    dest.results["final"] = resp.content
+    return out_msg
 
 
 async def main_demo() -> None:
@@ -177,12 +253,14 @@ async def main_demo() -> None:
         AgentMeta(
             name="content_gen",
             state=DemoContentGenState, 
-            runner=demo_agent_content_gen
+            runner=demo_agent_content_gen,
+            configs=configs["demo"]["agents"]["content_gen"]
         ),
         AgentMeta(
             name="basic_math",
             state=DemoBasicMathState,
-            runner=demo_agent_basic_math
+            runner=demo_agent_basic_math,
+            configs=configs["demo"]["agents"]["content_gen"]    
         )
     ]
     agents = agents_build(
@@ -197,8 +275,8 @@ async def main_demo() -> None:
         "agents_meta": {x.name: x for x in agents_meta},
         "states": None
     }
-    resp: Dict = await agents.ainvoke(in_msg)
-    pdb.set_trace()
+    out_msg: Dict = await agents.ainvoke(in_msg)
+    print(out_msg["states"])
     return
 
 

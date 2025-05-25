@@ -2,7 +2,7 @@
   "langchain": {
     "langsmith_tracing": true, 
     "langsmith_endpoint": "https://api.smith.langchain.com",
-    "langsmith_api_key": "",
+    "langsmith_api_key": "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",
     "langsmith_project": "instructionspipe-poc-agentic_mr-v2025.05.24.2239"
   },
   "llms": [
