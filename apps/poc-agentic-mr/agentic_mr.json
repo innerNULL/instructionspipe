@@ -1,0 +1,47 @@
+{
+  "langchain": {
+    "langsmith_tracing": true, 
+    "langsmith_endpoint": "https://api.smith.langchain.com",
+    "langsmith_api_key": "",
+    "langsmith_project": "instructionspipe-poc-agentic_mr-v2025.05.24.2239"
+  },
+  "llms": [
+    {
+      "model": "unsloth/Llama-3.2-3B-Instruct-unsloth-bnb-4bit",
+      "model_provider": "openai",
+      "base_url": "http://0.0.0.0:6789/v1/",
+      "api_key": "null",
+      "max_retries": 3,          
+      "timeout": 300,    
+      "temperature": 0.01,   
+      "max_tokens": 5000          
+    }
+  ],
+  "demo": {
+    "instructions": [
+      {
+        "name": "tell story",
+        "content": "tell me a short story in 5 sentences.",
+        "task": "content_gen"
+      },
+      {
+        "name": "fake_news",
+        "content": "fake a news in AI domain",
+        "task": "content_gen"
+      },
+      {
+        "name": "one plus one",
+        "content": "give me result of 1 + 1",
+        "task": "basic_math"
+      }
+    ],
+    "agents": {
+      "content_gen": {
+        "llm": "unsloth/Llama-3.2-3B-Instruct-unsloth-bnb-4bit"
+      },
+      "basic_math": {
+        "llm": "unsloth/Llama-3.2-3B-Instruct-unsloth-bnb-4bit"
+      }
+    }
+  }
+}
