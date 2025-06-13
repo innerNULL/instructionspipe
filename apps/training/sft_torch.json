@@ -7,8 +7,8 @@
     "key": ""
   },
   "model": {
-    "model_name_or_path": "meta-llama/Llama-3.2-3B-Instruct",
-    "tokenizer_name_or_path": "meta-llama/Llama-3.2-3B-Instruct",
+    "model_name_or_path": "unsloth/Llama-3.1-8B-Instruct",
+    "tokenizer_name_or_path": "unsloth/Llama-3.1-8B-Instruct",
     "quantization": true
   },
   "peft": {
@@ -32,9 +32,7 @@
   },
   "deepspeed": {
     "train_batch_size": "auto",
-    "zero_optimization": {
-      "stage": 2
-    },
+    "zero_optimization": { "stage": 3, "offload_param": { "device": "none" } }, 
     "fp16": {
         "enabled": true
     },
@@ -53,7 +51,7 @@
     "num_epochs": 10,
     "per_device_train_batch_size": 2,
     "per_device_eval_batch_size": 2,
-    "max_length": 1024,
+    "max_length": 6000,
     "gradient_accumulation_steps": 4
   }
 }

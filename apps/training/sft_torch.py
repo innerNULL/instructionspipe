@@ -154,13 +154,16 @@ def model_and_tokenizer_init(
         quantization_config=bnb_config if use_peft else None,
         trust_remote_code=True,
         #device_map="auto",
+        device_map=None,
         token=hf_token,
-        #attn_implementation="flash_attention_2"
+        attn_implementation="flash_attention_2"
     )
     tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
         tokenizer_name_or_path,
         token=hf_token
     )
+    # NOTE: Dangerous
+    """
     if tokenizer.pad_token is None: 
         if tokenizer.unk_token is not None:
             tokenizer.add_special_tokens({'pad_token': tokenizer.unk_token})
@@ -171,6 +174,7 @@ def model_and_tokenizer_init(
         tokenizer.add_special_tokens({'pad_token': pad_token})
         model.resize_token_embeddings(len(tokenizer))
         print("Using '%s' as `tokenizer.pad_token`" % pad_token)
+    """
     assert(tokenizer.pad_token != tokenizer.eos_token)
     peft_config = None
     if adapter_conf["type"] is not None:
@@ -254,7 +258,8 @@ def main_worker(local_rank: int, cfg_path: str):
     collator: DataCollatorForChatML = DataCollatorForChatML(
         tokenizer=tokenizer,
         prompt_key=None,
-        messages_key=data_conf["chatml_col"]
+        messages_key=data_conf["chatml_col"],
+        max_length=train_conf["max_length"]
     )
     train_config = SFTConfig(
         #per_device_train_batch_size=train_conf["per_device_train_batch_size"],
@@ -283,7 +288,7 @@ def main_worker(local_rank: int, cfg_path: str):
         dataset_kwargs={"skip_prepare_dataset": True},
         remove_unused_columns=False,
         # TODO: `packing` is a little dangerous for specific cases
-        #packing=True,
+        packing=True,
         eval_on_start=True,
         group_by_length=False, # Sad but not sure how to use this
         deepspeed=ds_conf,
