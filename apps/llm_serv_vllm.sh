@@ -24,8 +24,8 @@ function start() {
   cd ${CURR_DIR}
   cd ${WORKSPACE}
   ./_pyenv/bin/huggingface-cli login --token ${HF_TOKEN}
-  CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} \
-  VLLM_ALLOW_LONG_MAX_MODEL_LEN=${VLLM_ALLOW_LONG_MAX_MODEL_LEN} \
+  export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} \
+  export VLLM_ALLOW_LONG_MAX_MODEL_LEN=${VLLM_ALLOW_LONG_MAX_MODEL_LEN} \
   #./_pyenv/bin/vllm serve ${MODEL} \
   #  --tokenizer ${TOKENIZER} \
   #  --dtype ${DTYPE} \
@@ -42,10 +42,13 @@ function start() {
   command="${command} --tokenizer ${TOKENIZER}"
   command="${command} --dtype ${DTYPE}"
   command="${command} --max_model_len ${MAX_MODEL_LEN}"     
-  command="${command} --tensor-parallel-size ${TENSOR_PARALLEL_SIZE}"     
+  command="${command} --tensor-parallel-size ${TENSOR_PARALLEL_SIZE}"    
+  command="${command} --pipeline-parallel-size  ${PIPELINE_PARALLEL_SIZE}"
   command="${command} --gpu-memory-utilization ${GPU_MEM_UTILIZATION}"     
   command="${command} --port ${PORT}"  
   command="${command} --enable-prefix-caching"
+  gen_conf="{\"max_new_tokens\":${MAX_NEW_TOKENS}}"
+  command="${command} --override-generation-config ${gen_conf}"
   if [[ -n "${ADAPTER_NAME}" && -n "${ADAPTER_CKPT}" ]]; then
       command="${command} --enable-lora"     
       command="${command} --max_lora_rank ${MAX_LORA_RANK}"  

@@ -120,6 +120,19 @@ class LlmCli:
                 # Remove this as reasoning models (e.g. DS-R1) does not support constraint decoding
                 #response_format=json_schema
             )
+            # Handle repeating issue, this's a expt feature
+            retry: int = 0
+            while out.choices[0].finish_reason == "length" and retry < 3:
+               LOGGER.warning("Potentially having some repetition, trying to remove")
+               out = await self.async_cli.chat.completions.create(    
+                   model=self.model,         
+                   messages=prefix + [msg],  
+                   seed=self.seed,        
+                   temperature=1.0,
+                   max_tokens=max_tokens,
+                   frequency_penalty=0.2
+               )
+               retry += 1
             LOGGER.info("Gen text by **{}** for msgs \"{}\"".format(self.model, chaml))
             self.cache.write(cache_key, out.to_json())
         return out

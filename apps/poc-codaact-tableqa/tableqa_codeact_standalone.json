@@ -1,0 +1,41 @@
+{
+  "langchain": {
+    "langsmith_tracing": true, 
+    "langsmith_endpoint": "https://api.smith.langchain.com",
+    "langsmith_api_key": "",
+    "langsmith_project": "instructionspipe-poc-tabelqa_codeact-v2025.05.16.2230"
+  },
+  "llms": [
+    {
+      "model": "gpt-4o-mini",
+      "model_provider": "azure_openai",
+      "azure_endpoint": "",
+      "openai_api_version": "2024-08-01-preview",
+      "openai_api_key": "",
+      "max_retries": 3,
+      "timeout": 300,
+      "temperature": 0.01,
+      "max_tokens": 16384
+    },
+    {
+      "model": "unsloth/Llama-3.2-3B-Instruct-unsloth-bnb-4bit",
+      "model_provider": "openai",
+      "base_url": "http://0.0.0.0:6789/v1/",
+      "api_key": "null",
+      "max_retries": 3,          
+      "timeout": 300,    
+      "temperature": 0.01,   
+      "max_tokens": 5000          
+    }
+  ],
+  "inf_offline": {
+    "in_data_path": "synthetic_data_vitals.jsonl",
+    "out_data_path": "synthetic_data_vitals.jsonl.state.jsonl",
+    "in_text_col": "vitals_note",      
+    "instruction_col": "query_task",  
+    "model": "gpt-4o-mini" 
+  },
+  "serving_http": {
+    "port": 8910
+  }
+}
