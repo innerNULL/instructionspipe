@@ -3,7 +3,7 @@
 # date: 2025-02-19
 #
 # Usage:
-# CUDA_VISIBLE_DEVICES=1,3 python ./bin/training/sft_torch.py ./bin/training/sft_torch.json
+# CUDA_VISIBLE_DEVICES=6,7 accelerate launch ./apps/training/sft_accelerate.py --config apps/training/sft_accelerate.json 
 
 
 """
@@ -17,6 +17,7 @@ Reference:
 
 
 import pdb
+import argparse
 import sys
 import os
 import json
@@ -50,6 +51,20 @@ from trl import SFTTrainer
 from trl.trainer.utils import DataCollatorForChatML
 from accelerate import Accelerator
 from accelerate import PartialState
+
+
+def args_parser():
+    parser = argparse.ArgumentParser(
+        description="A SFT training backed by HuggingFace and DeepSpeed"
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        help="Path to the configs"
+    )
+    parser.add_argument("--local_rank", type=int, default=-1, help="launcher local rank")
+    args = parser.parse_args()
+    return args
 
 
 def chatml_check_and_adjust(
@@ -194,27 +209,9 @@ def model_and_tokenizer_init(
     return model, tokenizer
 
 
-def main_worker(local_rank: int, cfg_path: str):
-    # ——— set up env so NCCL/env:// works ———
-    visible: str = os.environ.get("CUDA_VISIBLE_DEVICES", "")
-    devices: List[str] = (
-        visible.split(",") if visible 
-        else [str(i) for i in range(torch.cuda.device_count())]
-    )
-    world_size: int = len(devices)
-
-    # tell torch.distributed who we are
-    os.environ["RANK"]       = str(local_rank)
-    os.environ["LOCAL_RANK"] = str(local_rank)
-    os.environ["WORLD_SIZE"] = str(world_size)
-    os.environ.setdefault("MASTER_ADDR", "127.0.0.1")
-    os.environ.setdefault("MASTER_PORT", "29543")
-
-    # bind this process to its GPU
-    torch.cuda.set_device(local_rank)
-    dist.init_process_group(backend="nccl", init_method="env://")
-
-    configs   = json.load(open(cfg_path))
+def main_worker():
+    args = args_parser()
+    configs: Dict = json.load(open(args.config))
     print(configs)
     hf_conf: Dict = configs["hf"]
     wandb_conf: Dict = configs["wandb"]
@@ -224,11 +221,6 @@ def main_worker(local_rank: int, cfg_path: str):
     peft_conf: Dict = configs["peft"]
     quant_conf: Dict = configs["quantization"]
     ds_conf: Dict = configs["deepspeed"]
-
-    if local_rank == 0:
-        wandb_init(wandb_conf["key"], wandb_conf["project"])
-    else:
-        os.environ["WANDB_MODE"] = "disabled"
 
     datasets: Optional[Dict[str, Dataset]] = None
     model: Optional[PreTrainedModel] = None
@@ -262,9 +254,9 @@ def main_worker(local_rank: int, cfg_path: str):
         max_length=train_conf["max_length"]
     )
     train_config = SFTConfig(
-        #per_device_train_batch_size=train_conf["per_device_train_batch_size"],
-        #per_device_eval_batch_size=train_conf["per_device_eval_batch_size"],
-        #gradient_accumulation_steps=train_conf["gradient_accumulation_steps"],
+        per_device_train_batch_size=train_conf["per_device_train_batch_size"],
+        per_device_eval_batch_size=train_conf["per_device_eval_batch_size"],
+        gradient_accumulation_steps=train_conf["gradient_accumulation_steps"],
         max_length=train_conf["max_length"],
         #optim="paged_adamw_32bit",
         logging_steps=1,
@@ -292,7 +284,7 @@ def main_worker(local_rank: int, cfg_path: str):
         eval_on_start=True,
         group_by_length=False, # Sad but not sure how to use this
         deepspeed=ds_conf,
-        local_rank=local_rank, 
+        local_rank=args.local_rank,
     )
     trainer = SFTTrainer(
         model,
@@ -307,24 +299,5 @@ def main_worker(local_rank: int, cfg_path: str):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: CUDA_VISIBLE_DEVICES=0,1 python sft.py path/to/sft.json")
-        sys.exit(1)
-
-    cfg_path = sys.argv[1]
-
-    # figure out how many GPUs you exposed
-    visible: str = os.environ.get("CUDA_VISIBLE_DEVICES", "")
-    devices: List[str] = (
-        visible.split(",") if visible 
-        else [str(i) for i in range(torch.cuda.device_count())]
-    )
-    world_size: int = len(devices)
-
     # spawn one process per GPU
-    mp.spawn(
-        main_worker,
-        args=(cfg_path,),
-        nprocs=world_size,
-        join=True
-    )
+    main_worker()

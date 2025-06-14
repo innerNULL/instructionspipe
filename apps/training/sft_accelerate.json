@@ -32,7 +32,11 @@
   },
   "deepspeed": {
     "train_batch_size": "auto",
-    "zero_optimization": { "stage": 3, "offload_param": { "device": "none" } }, 
+    "zero_optimization": {
+      "stage": 3, 
+      "offload_param": {"device": "cpu", "pin_memory": true},
+      "offload_optimizer": {"device": "cpu", "pin_memory": true}
+    }, 
     "fp16": {
         "enabled": true
     },
