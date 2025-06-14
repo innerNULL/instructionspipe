@@ -9,3 +9,4 @@ dependencies:
   - openblas>=0.3.18            # BLAS and LAPACK for numerical computing
   - ninja>=1.10.2
   - openmpi>=5.0.8
+  - cuda=12.6.0
