@@ -44,11 +44,15 @@ function start() {
   command="${command} --max_model_len ${MAX_MODEL_LEN}"     
   command="${command} --tensor-parallel-size ${TENSOR_PARALLEL_SIZE}"    
   command="${command} --pipeline-parallel-size  ${PIPELINE_PARALLEL_SIZE}"
-  command="${command} --gpu-memory-utilization ${GPU_MEM_UTILIZATION}"     
+  command="${command} --gpu-memory-utilization ${GPU_MEM_UTILIZATION}"   
+  command="${command} --served-model-name ${SERVED_MODEL_NAME}"
   command="${command} --port ${PORT}"  
   command="${command} --enable-prefix-caching"
   gen_conf="{\"max_new_tokens\":${MAX_NEW_TOKENS}}"
   command="${command} --override-generation-config ${gen_conf}"
+  if [ "${BITSANDBYTES_QUANTIZATION}" = "true" ]; then 
+    command="${command} --quantization bitsandbytes --load-format bitsandbytes"
+  fi
   if [[ -n "${ADAPTER_NAME}" && -n "${ADAPTER_CKPT}" ]]; then
       command="${command} --enable-lora"     
       command="${command} --max_lora_rank ${MAX_LORA_RANK}"  
