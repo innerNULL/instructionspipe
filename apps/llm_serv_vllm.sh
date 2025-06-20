@@ -39,6 +39,7 @@ function start() {
   #  --lora-modules "{\"name\": \"${ADAPTER_NAME}\", \"path\": \"${ADAPTER_CKPT}\", \"base_model_name\": \"${ADAPTER_BASEMODEL}\"}"
   command="./_pyenv/bin/vllm serve"
   command="${command} ${MODEL}"
+  command="${command} --seed 2"
   command="${command} --tokenizer ${TOKENIZER}"
   command="${command} --dtype ${DTYPE}"
   command="${command} --max_model_len ${MAX_MODEL_LEN}"     
