@@ -53,11 +53,15 @@ function start() {
   if [ "${BITSANDBYTES_QUANTIZATION}" = "true" ]; then 
     command="${command} --quantization bitsandbytes --load-format bitsandbytes"
   fi
+  if [[ -n "${ROPE_TYPE}" && -n "${ROPE_FACTOR}" ]]; then 
+    rope_conf="{\"rope_type\":\"${ROPE_TYPE}\",\"factor\":${ROPE_FACTOR}}"
+    command="${command} --rope-scaling ${rope_conf}"
+  fi
   if [[ -n "${ADAPTER_NAME}" && -n "${ADAPTER_CKPT}" ]]; then
-      command="${command} --enable-lora"     
-      command="${command} --max_lora_rank ${MAX_LORA_RANK}"  
-      lora_module="{\"name\":\"${ADAPTER_NAME}\",\"path\":\"${ADAPTER_CKPT}\",\"base_model_name\":\"${ADAPTER_BASEMODEL}\"}"
-      command="${command} --lora-modules ${lora_module}"          
+    command="${command} --enable-lora"     
+    command="${command} --max_lora_rank ${MAX_LORA_RANK}"  
+    lora_module="{\"name\":\"${ADAPTER_NAME}\",\"path\":\"${ADAPTER_CKPT}\",\"base_model_name\":\"${ADAPTER_BASEMODEL}\"}"
+    command="${command} --lora-modules ${lora_module}"          
   fi
   echo ${command}
   ${command}
