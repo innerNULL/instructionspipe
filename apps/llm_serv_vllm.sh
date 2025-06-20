@@ -53,9 +53,11 @@ function start() {
   if [ "${BITSANDBYTES_QUANTIZATION}" = "true" ]; then 
     command="${command} --quantization bitsandbytes --load-format bitsandbytes"
   fi
-  if [[ -n "${ROPE_TYPE}" && -n "${ROPE_FACTOR}" ]]; then 
-    rope_conf="{\"rope_type\":\"${ROPE_TYPE}\",\"factor\":${ROPE_FACTOR}}"
-    command="${command} --rope-scaling ${rope_conf}"
+  if [[ -n "${ROPE_CONF}" ]]; then
+    command="${command} --rope-scaling ${ROPE_CONF}"
+  fi
+  if [[ -n "${ROPE_THETA}" ]]; then
+    command="${command} --rope-theta ${ROPE_THETA}"
   fi
   if [[ -n "${ADAPTER_NAME}" && -n "${ADAPTER_CKPT}" ]]; then
     command="${command} --enable-lora"     
