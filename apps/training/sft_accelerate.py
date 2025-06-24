@@ -264,6 +264,8 @@ def main_worker():
         fp16=True,
         max_grad_norm=0.3,
         num_train_epochs=train_conf["num_epochs"],
+        weight_decay=train_conf["weight_decay"],
+        max_grad_norm=1.0, 
         save_strategy="steps",
         eval_strategy="steps",     
         save_steps=0.05,
