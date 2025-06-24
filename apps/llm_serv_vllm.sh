@@ -39,6 +39,7 @@ function start() {
   #  --lora-modules "{\"name\": \"${ADAPTER_NAME}\", \"path\": \"${ADAPTER_CKPT}\", \"base_model_name\": \"${ADAPTER_BASEMODEL}\"}"
   command="./_pyenv/bin/vllm serve"
   command="${command} ${MODEL}"
+  command="${command} --seed 2"
   command="${command} --tokenizer ${TOKENIZER}"
   command="${command} --dtype ${DTYPE}"
   command="${command} --max_model_len ${MAX_MODEL_LEN}"     
@@ -53,11 +54,17 @@ function start() {
   if [ "${BITSANDBYTES_QUANTIZATION}" = "true" ]; then 
     command="${command} --quantization bitsandbytes --load-format bitsandbytes"
   fi
+  if [[ -n "${ROPE_CONF}" ]]; then
+    command="${command} --rope-scaling ${ROPE_CONF}"
+  fi
+  if [[ -n "${ROPE_THETA}" ]]; then
+    command="${command} --rope-theta ${ROPE_THETA}"
+  fi
   if [[ -n "${ADAPTER_NAME}" && -n "${ADAPTER_CKPT}" ]]; then
-      command="${command} --enable-lora"     
-      command="${command} --max_lora_rank ${MAX_LORA_RANK}"  
-      lora_module="{\"name\":\"${ADAPTER_NAME}\",\"path\":\"${ADAPTER_CKPT}\",\"base_model_name\":\"${ADAPTER_BASEMODEL}\"}"
-      command="${command} --lora-modules ${lora_module}"          
+    command="${command} --enable-lora"     
+    command="${command} --max_lora_rank ${MAX_LORA_RANK}"  
+    lora_module="{\"name\":\"${ADAPTER_NAME}\",\"path\":\"${ADAPTER_CKPT}\",\"base_model_name\":\"${ADAPTER_BASEMODEL}\"}"
+    command="${command} --lora-modules ${lora_module}"          
   fi
   echo ${command}
   ${command}
